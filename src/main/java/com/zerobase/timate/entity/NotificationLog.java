@@ -16,7 +16,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.checkerframework.checker.units.qual.C;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
@@ -27,7 +26,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @NoArgsConstructor
 @AllArgsConstructor
 @EntityListeners(value = {AuditingEntityListener.class})
-public class NotificationLong {
+public class NotificationLog {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
@@ -36,13 +35,11 @@ public class NotificationLong {
   private String content;
 
   @CreatedDate
-  private LocalDateTime updateAt;
+  private LocalDateTime createdAt;
 
   @PrePersist
   public void prePersist() {
-    if (updateAt == null) {
-      updateAt = LocalDateTime.now();
-    }
+      createdAt = LocalDateTime.now();
   }
 
   @Enumerated(EnumType.STRING)

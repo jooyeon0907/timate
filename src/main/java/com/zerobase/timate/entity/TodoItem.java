@@ -28,7 +28,7 @@ public class TodoItem {
   @Column(length = 50, nullable = false)
   private String task;
   @Column(columnDefinition = "BOOLEAN DEFAULT false", nullable = false)
-  private boolean isCompleted;
+  private boolean isCompleted = false;
 
   @ManyToOne
   @JoinColumn(name = "schedule_id")

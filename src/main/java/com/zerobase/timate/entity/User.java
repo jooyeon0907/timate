@@ -44,9 +44,7 @@ public class User {
 
   @PrePersist
   public void prePersist() {
-    if (registerAt == null) {
       registerAt = LocalDateTime.now();
-    }
   }
 
 
