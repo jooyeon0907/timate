@@ -42,11 +42,14 @@ public class User {
   @Column(nullable = false)
   private LocalDateTime registerAt;
 
+  @Column(length = 50)
+  private String emailAuthKey;
+  private boolean emailAuthYn = false;
+
   @PrePersist
   public void prePersist() {
       registerAt = LocalDateTime.now();
   }
-
 
   @OneToMany(mappedBy = "user")
   private List<UserCalendar> userCalendars;
