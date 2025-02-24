@@ -1,10 +1,14 @@
 package com.zerobase.timate.service;
 
+import static com.zerobase.timate.type.ErrorCode.ALREADY_AUTH;
+import static com.zerobase.timate.type.ErrorCode.ALREADY_USER;
+import static com.zerobase.timate.type.ErrorCode.FAILED_AUTH;
+
 import com.zerobase.timate.compoent.MailComponent;
 import com.zerobase.timate.dto.SignUpForm;
 import com.zerobase.timate.entity.User;
+import com.zerobase.timate.exception.AuthException;
 import com.zerobase.timate.repository.UserRepository;
-import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,11 +24,9 @@ public class UserService {
 	@Value("${SERVER_URL}")
 	private String serverUrl;
 
-	public String signUp(SignUpForm form) {
-		Optional<User> optionalUser = userRepository.findByEmail(form.getEmail());
-		if (optionalUser.isPresent()) {
-			// TODO : custom exception
-			return "이미 가입된 회원입니다.";
+	public void signUp(SignUpForm form) {
+		if (userRepository.findByEmail(form.getEmail()).isPresent()) {
+			throw new AuthException(ALREADY_USER);
 		}
 
 		String uuid = UUID.randomUUID().toString();
@@ -45,24 +47,19 @@ public class UserService {
 				"<div><a target='_blank' href='http://" + serverUrl + "/user/email-auth?id=" + uuid + "'>가입 완료</a></div>";
 		mailComponent.sendMail(email, subject, text);
 
-
-		return "회원 가입에 성공하였습니다.";
 	}
 
-	public String emailAuth(String uuid) {
-		Optional<User> optionalUser = userRepository.findByEmailAuthKey(uuid);
-		if (!optionalUser.isPresent()) {
-			return "인증이 실패되었습니다.";
-		}
+	public void emailAuth(String uuid) {
+		User user = userRepository.findByEmailAuthKey(uuid).orElseThrow(
+			() -> new AuthException(FAILED_AUTH)
+		);
 
-		User user = optionalUser.get();
 		if (user.isEmailAuthYn()) {
-			return "이미 인증된 회원입니다.";
+			throw new AuthException(ALREADY_AUTH);
 		}
 
 		user.setEmailAuthYn(true);
 		userRepository.save(user);
 
-		return "인증이 완료되었습니다";
 	}
 }
