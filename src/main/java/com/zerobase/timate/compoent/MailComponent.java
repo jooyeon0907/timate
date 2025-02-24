@@ -1,13 +1,18 @@
 package com.zerobase.timate.compoent;
 
+import static com.zerobase.timate.type.ErrorCode.FAILED_SEND_EMAIL;
+
+import com.zerobase.timate.exception.AuthException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.mail.javamail.MimeMessagePreparator;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class MailComponent {
@@ -25,9 +30,7 @@ public class MailComponent {
 
 	}
 
-	public boolean sendMail(String mail, String subject, String text) {
-		boolean result = false;
-
+	public void sendMail(String mail, String subject, String text) {
 		MimeMessagePreparator msg = new MimeMessagePreparator() {
 			@Override
 			public void prepare(MimeMessage mimeMessage) throws Exception {
@@ -40,12 +43,11 @@ public class MailComponent {
 
 		try{
     		javaMailSender.send(msg);
-			result = true;
 		  }catch (Exception e){
-			System.out.println("sendMail error : " + e.getMessage());
+        	log.error("sendMail error: {}", e.getMessage());
+			throw new AuthException(FAILED_SEND_EMAIL);
 		  }
 
-		return result;
 	}
 
 }
