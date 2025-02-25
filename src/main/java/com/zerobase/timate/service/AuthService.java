@@ -6,25 +6,32 @@ import static com.zerobase.timate.type.ErrorCode.FAILED_AUTH;
 
 import com.zerobase.timate.compoent.MailComponent;
 import com.zerobase.timate.dto.SignUpForm;
+import com.zerobase.timate.dto.UserDto;
 import com.zerobase.timate.entity.User;
 import com.zerobase.timate.exception.AuthException;
 import com.zerobase.timate.repository.UserRepository;
+import java.util.ArrayList;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class UserService {
+public class AuthService implements UserDetailsService {
 
 	private final UserRepository userRepository;
 	private final MailComponent mailComponent;
+    private final PasswordEncoder passwordEncoder;
 
 	@Value("${SERVER_URL}")
 	private String serverUrl;
 
-	public void signUp(SignUpForm form) {
+	public UserDto signUp(SignUpForm form) {
 		if (userRepository.findByEmail(form.getEmail()).isPresent()) {
 			throw new AuthException(ALREADY_USER);
 		}
@@ -34,7 +41,7 @@ public class UserService {
 		User user = User.builder()
 			.email(form.getEmail())
 			.name(form.getName())
-			.password(form.getPassword()) // TODO: Spring Security 의 BCrypt 사용하여 password 암호화
+			.password(passwordEncoder.encode(form.getPassword()))
 			.emailAuthKey(uuid)
 			.build();
 
@@ -45,8 +52,9 @@ public class UserService {
 		String text = "<p>Timate 가입을 축하드립니다.</p>" +
 				"<p>아래 링크를 클릭하셔서 가입을 완료하세요.</p>" +
 				"<div><a target='_blank' href='http://" + serverUrl + "/user/email-auth?id=" + uuid + "'>가입 완료</a></div>";
-		mailComponent.sendMail(email, subject, text);
+//		mailComponent.sendMail(email, subject, text);
 
+		return UserDto.from(user);
 	}
 
 	public void emailAuth(String uuid) {
@@ -62,4 +70,15 @@ public class UserService {
 		userRepository.save(user);
 
 	}
+
+	@Override
+	public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+
+		User user = userRepository.findByEmail(email)
+			.orElseThrow(() -> new UsernameNotFoundException("회원 정보가 존재하지 않습니다."));
+		return new org.springframework.security.core.userdetails.User(user.getEmail(), user.getPassword(), new ArrayList<>());
+	}
+
+
+
 }
