@@ -22,13 +22,10 @@ public class ApiResponse<T> {
 	}
 
 
-	public static <T> ApiResponse<T> success(SuccessCode successCode) {
-		return new ApiResponse<>(successCode.name(), successCode.getMessage(), null, null);
+	public static <T> ApiResponse<T> success(T data) {
+		return new ApiResponse<>("SUCCESS", "요청이 성공적으로 처리되었습니다.", data, null);
 	}
 
-	public static <T> ApiResponse<T> success(SuccessCode successCode, T data) {
-		return new ApiResponse<>(successCode.name(), successCode.getMessage(), data, null);
-	}
 
 	public static <T> ApiResponse<T> error(ErrorCode errorCode) {
 		return new ApiResponse<>(errorCode.name(), errorCode.getMessage(), null, null);

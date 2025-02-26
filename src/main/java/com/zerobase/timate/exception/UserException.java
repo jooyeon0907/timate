@@ -10,11 +10,11 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @Builder
-public class AuthException extends RuntimeException{
+public class UserException extends RuntimeException{
 	private ErrorCode errorCode;
 	private String errorMessage;
 
-	public AuthException(ErrorCode errorCode) {
+	public UserException(ErrorCode errorCode) {
 		this.errorCode = errorCode;
 		this.errorMessage = errorCode.getMessage();
 	}
