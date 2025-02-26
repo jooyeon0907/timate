@@ -10,18 +10,17 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 public class UserDto {
-
-    public interface SelectGroup {}  // 조회 시 사용될 그룹 (name 검사 제외)
-	public interface UpdateGroup {}  // 수정 시 사용될 그룹
-
 	@Getter
+	@Setter
 	@AllArgsConstructor
 	public static class Request {
-		@NotNull(groups = {SelectGroup.class, UpdateGroup.class})
+
+		@NotNull
 		private Long id;
 
-		@NotNull(message = "이름은 필수 항목입니다.", groups = {UpdateGroup.class})
+		@NotNull(message = "이름은 필수 항목입니다.")
 		private String name;
+
 	}
 
 	@Getter
