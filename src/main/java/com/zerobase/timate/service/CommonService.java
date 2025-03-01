@@ -22,4 +22,10 @@ public class CommonService {
 			.orElseThrow(() -> new AuthException(USER_NOT_FOUND));
 	}
 
+	public Long getUserIdByEmail(String email) {
+		User user = userRepository.findByEmail(email)
+			.orElseThrow(() -> new AuthException(USER_NOT_FOUND));
+		return user.getId();
+	}
+
 }

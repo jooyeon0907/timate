@@ -31,7 +31,6 @@ public class CalendarService {
 
 	@Transactional
 	public CalendarDto.Response create(Request request) {
-		// 사용자 확인
 		User user = commonService.getUserById(request.getUserId());
 
 		Calendar calendar = Calendar.builder()
@@ -54,7 +53,6 @@ public class CalendarService {
 	}
 
 	public List<CalendarDto.Response> list(Long userId) {
-		// 사용자 확인
 		User user = commonService.getUserById(userId);
 
 		List<UserCalendar> userCalendars = userCalendarRepository.findByUserId(userId);
@@ -66,7 +64,6 @@ public class CalendarService {
 	}
 
 	public CalendarDto.Response read(Long id, Long userId) {
-		// 사용자 확인
 		User user = commonService.getUserById(userId);
 
 		Calendar calendar = getCalendarById(id);
@@ -75,7 +72,6 @@ public class CalendarService {
 	}
 
 	public CalendarDto.Response update(Request request) {
-		// 사용자 확인
 		User user = commonService.getUserById(request.getUserId());
 
 		Calendar calendar = getCalendarById(request.getId());
@@ -87,7 +83,6 @@ public class CalendarService {
 
 	@Transactional
 	public void delete(Request request) {
-		// 사용자 확인
 		User user = commonService.getUserById(request.getUserId());
 
 		Calendar calendar = getCalendarById(request.getId());

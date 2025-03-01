@@ -10,6 +10,7 @@ import com.zerobase.timate.dto.SignInForm;
 import com.zerobase.timate.dto.SignUpForm;
 import com.zerobase.timate.service.AuthService;
 import com.zerobase.timate.security.TokenProvider;
+import com.zerobase.timate.service.CommonService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +34,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
 	private final AuthService authService;
+	private final CommonService commonService;
     private final AuthenticationManager authenticationManager;
     private final TokenProvider tokenProvider;
 
@@ -55,7 +57,8 @@ public class AuthController {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(form.getEmail(), form.getPassword()));
 
-		String token = tokenProvider.generateToken(form.getEmail());
+		Long userId = commonService.getUserIdByEmail(form.getEmail());
+		String token = tokenProvider.generateToken(form.getEmail(), userId);
         return ResponseEntity.ok(token);
     }
 

@@ -30,7 +30,6 @@ public class CalendarDto {
 
 		@NotNull(groups = {ValidationGroups.Create.class, ValidationGroups.Update.class, ValidationGroups.Delete.class})
 		private Long id;
-		@NotNull(groups = {ValidationGroups.Create.class, ValidationGroups.Update.class, ValidationGroups.Delete.class})
 		private Long userId;
 		@NotNull(message = "이름은 필수 항목입니다.", groups = {ValidationGroups.Create.class, ValidationGroups.Update.class})
 		private String name;

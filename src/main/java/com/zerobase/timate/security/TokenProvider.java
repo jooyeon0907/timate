@@ -1,5 +1,6 @@
 package com.zerobase.timate.security;
 
+import com.zerobase.timate.model.UserVo;
 import com.zerobase.timate.service.AuthService;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
@@ -13,11 +14,14 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 @Component
 @RequiredArgsConstructor
 public class TokenProvider {
+
+	public static final String TOKEN_PREFIX = "Bearer ";
 
     @Value("${jwt.secret}")
     private String secretKey;
@@ -33,9 +37,13 @@ public class TokenProvider {
         this.key = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
     }
 
-    public String generateToken(String email) {
+    public String generateToken(String email, Long id) {
+		Claims claims = Jwts.claims().setSubject(email)
+									.setId(id.toString());
         return Jwts.builder()
-                .setSubject(email)
+				.setClaims(claims)
+//				.setId(String.valueOf(id))
+//                .setSubject(email)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
                 .signWith(key, SignatureAlgorithm.HS256)
@@ -45,7 +53,7 @@ public class TokenProvider {
 	public boolean validateToken(String token){
 		if (!StringUtils.hasText(token)) return false; // 토큰이 유효하지 않다면 false 반환
 
-		var claims = this.paresClaims(token);
+		var claims = this.parseClaims(token);
 		return !claims.getExpiration().before(new Date()); // 토큰의 만료시간을 현재 시간과 비교하여 만료 여부 반환
 	}
 
@@ -55,16 +63,29 @@ public class TokenProvider {
     }
 
 	public String getUsername(String token) {
-		return this.paresClaims(token).getSubject();
+		return this.parseClaims(token).getSubject();
+	}
+
+	public UserVo getUserVo(String token) {
+    	if (StringUtils.hasText(token) && token.startsWith(TOKEN_PREFIX)) {
+			token = token.substring(TOKEN_PREFIX.length());
+			return new UserVo(Long.valueOf(this.parseClaims(token).getId()), this.parseClaims(token).getSubject());
+		}
+
+		throw new IllegalArgumentException("Invalid JWT token");
 	}
 
 	// 토큰이 유효한지 확인
-	private Claims paresClaims(String token) {
+	private Claims parseClaims(String token) {
 		try{
 			return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
 		} catch (ExpiredJwtException e){
         	return e.getClaims();
+		}catch (JwtException e) {
+			// JWT 관련 다른 예외 처리
+			throw new IllegalArgumentException("Invalid JWT token", e);
 		}
 	}
+
 
 }

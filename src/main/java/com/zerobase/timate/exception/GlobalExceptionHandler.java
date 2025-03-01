@@ -75,7 +75,7 @@ public class GlobalExceptionHandler {
 		Map<String, String> errors = new HashMap<>();
     	errors.put("error", e.getMessage());
 
-		return ResponseEntity.internalServerError().body(ApiResponse.error(INTERVAL_SERVER_ERROR));
+		return ResponseEntity.internalServerError().body(ApiResponse.error(INTERVAL_SERVER_ERROR, errors));
 	}
 
 }
