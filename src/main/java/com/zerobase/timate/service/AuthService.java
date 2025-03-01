@@ -87,7 +87,6 @@ public class AuthService implements UserDetailsService {
 
 		User user = userRepository.findByEmail(email)
 			.orElseThrow(() -> new UsernameNotFoundException("회원 정보가 존재하지 않습니다."));
-//		return new org.springframework.security.core.userdetails.User(user.getEmail(), user.getPassword(), new ArrayList<>());
 		return new CustomUserDetails(user.getId(), user.getEmail(), user.getPassword(), new ArrayList<>());
 	}
 
