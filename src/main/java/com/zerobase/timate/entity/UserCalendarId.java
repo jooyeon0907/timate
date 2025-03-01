@@ -5,6 +5,7 @@ import jakarta.persistence.Embeddable;
 import java.io.Serializable;
 import java.util.Objects;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.NoArgsConstructor;
 
 @Embeddable
@@ -26,6 +27,6 @@ public class UserCalendarId implements Serializable {
 
   @Override
   public int hashCode() {
-    return super.hashCode();
+    return Objects.hash(userId, calendarId);
   }
 }

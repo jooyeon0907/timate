@@ -23,7 +23,7 @@ public class UserController {
 
 	@GetMapping("/info")
 	public ResponseEntity<ApiResponse> info(@RequestParam Long id) {
-		return ResponseEntity.ok(ApiResponse.success(userService.getUserInfo(id)));
+		return ResponseEntity.ok(ApiResponse.success(userService.getUser(id)));
 	}
 
 	@PostMapping("/update")
