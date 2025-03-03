@@ -52,11 +52,11 @@ public class AuthController {
 	@PostMapping("/sign-in")
     public ResponseEntity<String> login(@Valid @RequestBody SignInForm form) {
 		// 사용자 인증
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(form.getEmail(), form.getPassword()));
+		Authentication authentication = authenticationManager.authenticate(
+			new UsernamePasswordAuthenticationToken(form.getEmail(), form.getPassword()));
 
 		String token = tokenProvider.generateToken(form.getEmail());
-        return ResponseEntity.ok(token);
+		return ResponseEntity.ok(token);
     }
 
 	@PostMapping("/logout")
@@ -68,8 +68,8 @@ public class AuthController {
 
     @GetMapping("/me")
     public ResponseEntity<String> getCurrentUser(@AuthenticationPrincipal UserDetails userDetails) {
-        // 현재 로그인된 사용자 정보 (userDetails) 확인 가능
-        String username = userDetails.getUsername();
+		// 현재 로그인된 사용자 정보 (userDetails) 확인 가능
+		String username = userDetails.getUsername();
 		return ResponseEntity.ok("Hello " + username);
     }
 
