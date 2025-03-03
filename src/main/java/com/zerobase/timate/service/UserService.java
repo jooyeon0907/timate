@@ -19,21 +19,6 @@ public class UserService {
 
 	private final UserRepository userRepository;
 
-
-	public void emailAuth(String uuid) {
-		User user = userRepository.findByEmailAuthKey(uuid).orElseThrow(
-			() -> new AuthException(FAILED_AUTH)
-		);
-
-		if (user.isEmailAuthYn()) {
-			throw new AuthException(ALREADY_AUTH);
-		}
-
-		user.setEmailAuthYn(true);
-		userRepository.save(user);
-
-	}
-
 	public UserDto.Response getUserInfo(Long id) {
 		User user = getUser(id);
 		return UserDto.Response.from(user);
