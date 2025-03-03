@@ -21,3 +21,7 @@ spring:
         smtp:
           starttls:
             enable: true
+
+
+jwt:
+  secret: ${JWT_SECRET_KEY}
