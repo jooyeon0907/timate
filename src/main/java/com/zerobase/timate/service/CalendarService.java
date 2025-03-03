@@ -12,7 +12,6 @@ import com.zerobase.timate.entity.UserCalendarId;
 import com.zerobase.timate.exception.CalendarException;
 import com.zerobase.timate.repository.CalendarRepository;
 import com.zerobase.timate.repository.UserCalendarRepository;
-import com.zerobase.timate.repository.UserRepository;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -53,7 +52,6 @@ public class CalendarService {
 	}
 
 	public List<CalendarDto.Response> list(Long userId) {
-		User user = commonService.getUserById(userId);
 
 		List<UserCalendar> userCalendars = userCalendarRepository.findByUserId(userId);
 
@@ -64,17 +62,12 @@ public class CalendarService {
 	}
 
 	public CalendarDto.Response read(Long id, Long userId) {
-		User user = commonService.getUserById(userId);
-
 		Calendar calendar = getCalendarById(id);
-
 		return CalendarDto.Response.from(calendar);
 	}
 
 	public CalendarDto.Response update(Request request) {
-		User user = commonService.getUserById(request.getUserId());
-
-		Calendar calendar = getCalendarById(request.getId());
+		Calendar calendar = getCalendarById(request.getCalendarId());
 		calendar.setName(request.getName());
 		calendarRepository.save(calendar);
 
@@ -83,9 +76,10 @@ public class CalendarService {
 
 	@Transactional
 	public void delete(Request request) {
-		User user = commonService.getUserById(request.getUserId());
+		Calendar calendar = getCalendarById(request.getCalendarId());
 
-		Calendar calendar = getCalendarById(request.getId());
+		// 해당 유저 권한이 MASTER 인지 확인
+		commonService.checkCalendarMaster(request.getUserId(), calendar.getId());
 
 		// userCalendar 삭제
 		userCalendarRepository.deleteByCalendarId(calendar.getId());
@@ -94,7 +88,7 @@ public class CalendarService {
 
 	}
 
-	private Calendar getCalendarById(Long id) {
+	public Calendar getCalendarById(Long id) {
 		return calendarRepository.findById(id)
 			.orElseThrow(() -> new CalendarException(CALENDAR_NOT_FOUND));
 	}

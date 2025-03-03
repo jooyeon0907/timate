@@ -34,6 +34,18 @@ public class GlobalExceptionHandler {
 		return ResponseEntity.badRequest().body(ApiResponse.error(e.getErrorCode()));
 	}
 
+	@ExceptionHandler(CalendarException.class)
+	public ResponseEntity<ApiResponse> handleCalendarException(CalendarException e){
+		log.error("{} is CalendarException occurred.", e.getErrorMessage());
+
+		// 멤버 목록이 있을 경우, 멤버 목록을 함께 반환
+		if (e.getMembers() != null ){
+			return ResponseEntity.badRequest().body(ApiResponse.error(e.getErrorCode(), e.getMembers()));
+		}
+
+		return ResponseEntity.badRequest().body(ApiResponse.error(e.getErrorCode()));
+	}
+
 	// DTO 유효성 검사 실패 예외 처리
 	@ExceptionHandler(MethodArgumentNotValidException.class)
 	public ResponseEntity<ApiResponse> handleMethodArgumentNotValidException(MethodArgumentNotValidException e){

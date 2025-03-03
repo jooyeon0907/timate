@@ -25,11 +25,11 @@ public class CalendarDto {
 	@Getter
 	@Setter
 	@AllArgsConstructor
-	@Schema(name = "CalendarRequestDto", description = "일정 요청 DTO")
+	@Schema(name = "CalendarRequestDto", description = "캘린더 요청 DTO")
 	public static class Request {
 
 		@NotNull(groups = {ValidationGroups.Create.class, ValidationGroups.Update.class, ValidationGroups.Delete.class})
-		private Long id;
+		private Long calendarId;
 		private Long userId;
 		@NotNull(message = "이름은 필수 항목입니다.", groups = {ValidationGroups.Create.class, ValidationGroups.Update.class})
 		private String name;

@@ -24,19 +24,7 @@ public class CalendarController {
 	private final CalendarService calendarService;
 	private final AuthService authService;
 
-
-
-//	  - 캘린더 생성
-//	  - 캘린더 조회
-//    - 캘린더 목록 조회
-//    - 캘린더 수정
-//    - 캘린더 삭제
-
-
-//    - 캘린더 멤버추가
-//    - 캘린더 멤버 목록 조회
 //    - 캘린더 나가기
-//    - 생성자 권한 변경
 
 
 	@PostMapping("/create")
@@ -70,5 +58,8 @@ public class CalendarController {
 		calendarService.delete(request);
 		return ResponseEntity.ok(ApiResponse.success("삭제되었습니다."));
 	}
+
+
+
 
 }

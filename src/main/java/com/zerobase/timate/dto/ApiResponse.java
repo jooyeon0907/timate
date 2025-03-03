@@ -31,6 +31,10 @@ public class ApiResponse<T> {
 		return new ApiResponse<>(errorCode.name(), errorCode.getMessage(), null, null);
 	}
 
+	public static <T> ApiResponse<T> error(ErrorCode errorCode, T data) {
+		return new ApiResponse<>(errorCode.name(), errorCode.getMessage(), data, null);
+	}
+
 	public static <T> ApiResponse<T> error(ErrorCode errorCode, Map<String, String> errors) {
 		return new ApiResponse<>(errorCode.name(), errorCode.getMessage(), null, errors);
 	}
