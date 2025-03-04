@@ -90,7 +90,7 @@ public class CalendarMemberService {
                 .map(m -> UserDto.Response.from(m.getUser()))
                 .collect(Collectors.toList());
 
-			if (members.size() > 1) {
+			if (memberList.size() > 0) {
 				// 멤버 목록을 반환하여 프론트에서 새로운 생성자 선택
  				throw new CalendarException(MEMBER_LIST_REQUIRED, memberList);
 
