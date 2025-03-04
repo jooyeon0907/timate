@@ -31,7 +31,7 @@ public class AuthService implements UserDetailsService {
 	@Value("${SERVER_URL}")
 	private String serverUrl;
 
-	public UserDto signUp(SignUpForm form) {
+	public UserDto.Response signUp(SignUpForm form) {
 		if (userRepository.findByEmail(form.getEmail()).isPresent()) {
 			throw new AuthException(ALREADY_USER);
 		}
@@ -54,7 +54,7 @@ public class AuthService implements UserDetailsService {
 				"<div><a target='_blank' href='http://" + serverUrl + "/user/email-auth?id=" + uuid + "'>가입 완료</a></div>";
 //		mailComponent.sendMail(email, subject, text);
 
-		return UserDto.from(user);
+		return UserDto.Response.from(user);
 	}
 
 	public void emailAuth(String uuid) {

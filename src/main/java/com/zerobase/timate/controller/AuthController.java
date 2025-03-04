@@ -38,7 +38,7 @@ public class AuthController {
 
 	@PostMapping("/sign-up")
 	public ResponseEntity<ApiResponse> signUp(@Valid @RequestBody SignUpForm form) {
-		return ResponseEntity.ok(ApiResponse.success(SIGNUP_SUCCESS, authService.signUp(form)));
+		return ResponseEntity.ok(ApiResponse.success(authService.signUp(form)));
 	}
 
 	@GetMapping("/email-auth")
