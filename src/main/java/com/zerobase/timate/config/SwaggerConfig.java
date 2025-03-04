@@ -12,26 +12,26 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class SwaggerConfig {
 
-    @Bean
-    public OpenAPI openAPI() {
-        return new OpenAPI()
-            .addSecurityItem(new SecurityRequirement().addList("Authorization"))
-            .components(new Components()
-                .addSecuritySchemes("Authorization",
-                    new SecurityScheme()
-                        .type(SecurityScheme.Type.HTTP)
-                        .scheme("bearer")
-                        .bearerFormat("JWT")
-                )
-            );
-    }
+	@Bean
+	public OpenAPI openAPI() {
+		return new OpenAPI()
+			.addSecurityItem(new SecurityRequirement().addList("Authorization"))
+			.components(new Components()
+				.addSecuritySchemes("Authorization",
+					new SecurityScheme()
+						.type(SecurityScheme.Type.HTTP)
+						.scheme("bearer")
+						.bearerFormat("JWT")
+				)
+			);
+	}
 
 
 	private Info apiInfo() {
 		return new Info()
-				.title("Timate")
-				.description("Timate API Documentation")
-				.version("v1");
+			.title("Timate")
+			.description("Timate API Documentation")
+			.version("v1");
 	}
 
 }
