@@ -105,7 +105,7 @@ public class CalendarMemberService {
 	}
 
 	@Transactional
-	public void changeMasterAndExit(UserCalendarDto.Request request) {
+	public void transferMasterAndExit(UserCalendarDto.Request request) {
 		Long userId = request.getUserId();
 		Long calendarId = request.getCalendarId();
 		Long newMasterId = request.getNewMasterId();
