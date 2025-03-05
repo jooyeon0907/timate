@@ -66,9 +66,9 @@ public class CalendarService {
 	}
 
 	public CalendarDto.Response update(Request request) {
-		// TODO: 캘린더 멤버인지 확인
+		// TODO : 해당 캘린더의 권한이 MASTER 인지 확인
 
-		Calendar calendar = getCalendarById(request.getUserId());
+		Calendar calendar = getCalendarById(request.getId());
 		calendar.setName(request.getName());
 		calendarRepository.save(calendar);
 

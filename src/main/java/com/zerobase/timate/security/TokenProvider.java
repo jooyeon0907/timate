@@ -1,8 +1,11 @@
 package com.zerobase.timate.security;
 
-import com.zerobase.timate.model.UserVo;
 import com.zerobase.timate.service.AuthService;
-import io.jsonwebtoken.*;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import java.nio.charset.StandardCharsets;
@@ -14,7 +17,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
-import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 @Component
@@ -42,8 +44,6 @@ public class TokenProvider {
 									.setId(id.toString());
         return Jwts.builder()
 				.setClaims(claims)
-//				.setId(String.valueOf(id))
-//                .setSubject(email)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
                 .signWith(key, SignatureAlgorithm.HS256)
@@ -64,15 +64,6 @@ public class TokenProvider {
 
 	public String getUsername(String token) {
 		return this.parseClaims(token).getSubject();
-	}
-
-	public UserVo getUserVo(String token) {
-    	if (StringUtils.hasText(token) && token.startsWith(TOKEN_PREFIX)) {
-			token = token.substring(TOKEN_PREFIX.length());
-			return new UserVo(Long.valueOf(this.parseClaims(token).getId()), this.parseClaims(token).getSubject());
-		}
-
-		throw new IllegalArgumentException("Invalid JWT token");
 	}
 
 	// 토큰이 유효한지 확인
