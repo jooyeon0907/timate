@@ -19,7 +19,6 @@ public class CalendarDto {
 	public interface ValidationGroups {
 		interface Create {}  // 캘린더 생성 그룹
 		interface Update {}  // 캘린더 수정 그룹
-		interface Delete {}  // 캘린더 삭제 그룹
 	}
 
 	@Getter
@@ -28,12 +27,11 @@ public class CalendarDto {
 	@Schema(name = "CalendarRequestDto", description = "일정 요청 DTO")
 	public static class Request {
 
-		@NotNull(groups = {ValidationGroups.Create.class, ValidationGroups.Update.class, ValidationGroups.Delete.class})
 		private Long id;
 		private Long userId;
 		@NotNull(message = "이름은 필수 항목입니다.", groups = {ValidationGroups.Create.class, ValidationGroups.Update.class})
 		private String name;
-		@NotNull(groups = ValidationGroups.Create.class)
+		@NotNull(message = "타입은 필수 항목입니다.", groups = ValidationGroups.Create.class)
 		private CalendarType type;
 
 	}

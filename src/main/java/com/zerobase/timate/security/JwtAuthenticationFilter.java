@@ -27,28 +27,29 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 	// 요청이 들어올 때마다 필터가 컨트롤러에 실행되기 전에 먼저 실행되면서 요청의 헤더에 토큰이 있는지 확인하고,
 	// 토큰이 유효하다면 인증정보를 context 에 담음
 	@Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
+	protected void doFilterInternal(HttpServletRequest request,
+									HttpServletResponse response,
+									FilterChain filterChain) throws ServletException, IOException {
 
-        String token = resolveTokenFromRequest(request);
+		String token = resolveTokenFromRequest(request);
 
 		if (StringUtils.hasText(token) && this.tokenProvider.validateToken(token)) {
 			Authentication auth = this.tokenProvider.getAuthentication(token);
-			SecurityContextHolder.getContext().setAuthentication(auth); //현재 인증된 사용자의 정보를 Spring Security 의 보안 컨텍스트에 설정
+			SecurityContextHolder.getContext()
+				.setAuthentication(auth); //현재 인증된 사용자의 정보를 Spring Security 의 보안 컨텍스트에 설정
 
-			log.info(String.format("[%s] -> %s", this.tokenProvider.getUsername(token), request.getRequestURI()));
+			log.info("{} -> {}", this.tokenProvider.getUsername(token), request.getRequestURI());
 		}
 
 		filterChain.doFilter(request, response);
 
-    }
+	}
 
 
 	private String resolveTokenFromRequest(HttpServletRequest request) {
 		String token = request.getHeader(TOKEN_HEADER);
 
-		if (!ObjectUtils.isEmpty(token) && token.startsWith(TOKEN_PREFIX)){
+		if (!ObjectUtils.isEmpty(token) && token.startsWith(TOKEN_PREFIX)) {
 			return token.substring(TOKEN_PREFIX.length());
 		}
 

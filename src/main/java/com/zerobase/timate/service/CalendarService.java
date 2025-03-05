@@ -12,7 +12,6 @@ import com.zerobase.timate.entity.UserCalendarId;
 import com.zerobase.timate.exception.CalendarException;
 import com.zerobase.timate.repository.CalendarRepository;
 import com.zerobase.timate.repository.UserCalendarRepository;
-import com.zerobase.timate.repository.UserRepository;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -40,7 +39,6 @@ public class CalendarService {
 		calendarRepository.save(calendar);
 
 		UserCalendarId userCalendarId = new UserCalendarId(user.getId(), calendar.getId());
-
 		UserCalendar userCalendar = new UserCalendar().builder()
 			.id(userCalendarId) // 복합키를 명시적으로 설정
 			.user(user)
@@ -53,28 +51,24 @@ public class CalendarService {
 	}
 
 	public List<CalendarDto.Response> list(Long userId) {
-		User user = commonService.getUserById(userId);
+		// TODO: 캘린더 멤버인지 확인
 
 		List<UserCalendar> userCalendars = userCalendarRepository.findByUserId(userId);
 
-		// 각 UserCalendar에서 calendarId를 기반으로 Calendar 객체를 찾아서 리스트로 반환
 		return userCalendars.stream()
 			.map(userCalendar -> CalendarDto.Response.from(userCalendar.getCalendar()))
 			.collect(Collectors.toList());
 	}
 
-	public CalendarDto.Response read(Long id, Long userId) {
-		User user = commonService.getUserById(userId);
-
-		Calendar calendar = getCalendarById(id);
-
-		return CalendarDto.Response.from(calendar);
+	public CalendarDto.Response read(Long userId, Long id) {
+		// TODO: 캘린더 멤버인지 확인
+		return CalendarDto.Response.from(getCalendarById(id));
 	}
 
 	public CalendarDto.Response update(Request request) {
-		User user = commonService.getUserById(request.getUserId());
+		// TODO: 캘린더 멤버인지 확인
 
-		Calendar calendar = getCalendarById(request.getId());
+		Calendar calendar = getCalendarById(request.getUserId());
 		calendar.setName(request.getName());
 		calendarRepository.save(calendar);
 
@@ -82,12 +76,11 @@ public class CalendarService {
 	}
 
 	@Transactional
-	public void delete(Request request) {
-		User user = commonService.getUserById(request.getUserId());
+	public void delete(Long useId, Long id) {
+		// TODO : 해당 캘린더의 권한이 MASTER 인지 확인
 
-		Calendar calendar = getCalendarById(request.getId());
+		Calendar calendar = getCalendarById(id);
 
-		// userCalendar 삭제
 		userCalendarRepository.deleteByCalendarId(calendar.getId());
 
 		calendarRepository.deleteById(calendar.getId());

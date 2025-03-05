@@ -15,7 +15,6 @@ public class UserService {
 	private final CommonService commonService;
 	private final UserRepository userRepository;
 
-
 	public UserDto.Response getUser(Long id) {
 		User user = commonService.getUserById(id);
 		return UserDto.Response.from(user);
