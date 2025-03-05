@@ -6,10 +6,12 @@ import static com.zerobase.timate.type.SuccessCode.MASTER_ROLE_TRANSFER_AND_EXIT
 
 import com.zerobase.timate.dto.ApiResponse;
 import com.zerobase.timate.dto.UserCalendarDto;
+import com.zerobase.timate.dto.UserCalendarDto.ChangeMaster;
 import com.zerobase.timate.service.AuthService;
 import com.zerobase.timate.service.CalendarMemberService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -53,7 +55,8 @@ public class CalendarMemberController {
 
 	@PostMapping("/transfer-master")
 	public ResponseEntity<ApiResponse> transferMasterAndExit(@PathVariable Long calendarId,
-													@RequestBody UserCalendarDto.Request request) {
+															@Validated(ChangeMaster.class)
+															@RequestBody UserCalendarDto.Request request) {
 		request.setCalendarId(calendarId);
 		request.setUserId(authService.getAuthenticatedUserId());
 		calendarMemberService.transferMasterAndExit(request);

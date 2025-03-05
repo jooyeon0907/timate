@@ -14,15 +14,19 @@ import lombok.Setter;
 
 public class UserCalendarDto {
 
+	public interface ChangeMaster {}
+
 	@Getter
 	@Setter
+	@NoArgsConstructor
 	@AllArgsConstructor
 	@Schema(name = "UserCalendarRequestDto", description = "사용자 캘린더 요청 DTO")
 	public static class Request {
 
-		@NotNull
 		private Long calendarId;
 		private Long userId;
+		private MemberRole role;
+		@NotNull(groups = ChangeMaster.class)
 		private Long newMasterId;
 
 	}
@@ -44,13 +48,6 @@ public class UserCalendarDto {
 		private String userName;
 		@JsonProperty("role")
 		private MemberRole role;
-
-		// 캘린더 id
-		// 캘린더 이름
-		// 사용자 id
-		// 사용자 이름
-		// 권한
-
 
 		public static Response from(UserCalendar uc) {
 			return Response.builder()

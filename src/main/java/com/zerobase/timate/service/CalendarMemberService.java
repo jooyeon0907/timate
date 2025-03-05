@@ -3,8 +3,7 @@ package com.zerobase.timate.service;
 import static com.zerobase.timate.type.ErrorCode.CALENDAR_DELETION_REQUIRED;
 import static com.zerobase.timate.type.ErrorCode.EXISTS_CALENDAR_MEMBER;
 import static com.zerobase.timate.type.ErrorCode.MEMBER_LIST_REQUIRED;
-import static com.zerobase.timate.type.ErrorCode.NOT_CALENDAR_MASTER;
-import static com.zerobase.timate.type.ErrorCode.NOT_CALENDAR_MEMBER;
+import static com.zerobase.timate.type.ErrorCode.SELF_PERMISSION_TRANSFER;
 
 import com.zerobase.timate.dto.UserCalendarDto;
 import com.zerobase.timate.dto.UserDto;
@@ -19,10 +18,11 @@ import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
-@org.springframework.stereotype.Service
+@Service
 @RequiredArgsConstructor
 public class CalendarMemberService {
 
@@ -33,25 +33,26 @@ public class CalendarMemberService {
 
 
 	public UserCalendarDto.Response create(UserCalendarDto.Request request) {
-		log.info("캘린더 멤버 추가 요청 - userId: {}, calendarId: {}", request.getUserId(), request.getCalendarId());
-		User user = commonService.getUserById(request.getUserId());
-		Calendar calendar = calendarService.getCalendarById(request.getCalendarId());
+		Long userId = request.getUserId();
+		Long calendarId = request.getCalendarId();
+
+		log.info("캘린더 멤버 추가 요청 - userId: {}, calendarId: {}", userId, calendarId);
+		User user = commonService.getUserById(userId);
+		Calendar calendar = calendarService.getCalendarById(calendarId);
 
 
 		// 이미 초대된 멤버인지 확인
-		if (userCalendarRepository.findByUserIdAndCalendarId(user.getId(), calendar.getId()).isPresent()){
-			log.warn("이미 초대된 사용자입니다 - userId: {}, calendarId: {}", user.getId(), calendar.getId());
+		if (commonService.isCalendarMember(user.getId(), calendarId)){
+			log.warn("이미 초대된 사용자입니다 - userId: {}, calendarId: {}", user.getId(), calendarId);
 			throw new CalendarException(EXISTS_CALENDAR_MEMBER);
-		};
+		}
 
-
-		UserCalendarId userCalendarId = new UserCalendarId(request.getCalendarId(), user.getId());
-
+		UserCalendarId userCalendarId = new UserCalendarId(calendarId, user.getId());
 		UserCalendar userCalendar = new UserCalendar().builder()
 			.id(userCalendarId)
 			.user(user)
 			.calendar(calendar)
-			.role(MemberRole.MEMBER)
+			.role(request.getRole())
 			.build();
 		userCalendarRepository.save(userCalendar);
 		log.info("캘린더 멤버 추가 완료! - userId: {}, calendarId: {}", user.getId(), calendar.getId());
@@ -60,20 +61,8 @@ public class CalendarMemberService {
 
 	}
 
-	public List<UserDto.Response> memberList(Long userId, Long calendarId) {
-		// 해당 캘린더의 멤버인지 확인
-		commonService.getUserCalendar(userId, calendarId);
-
-		List<UserCalendar> userCalendars = userCalendarRepository.findByCalendarId(calendarId);
-
-		return userCalendars.stream()
-			.map(userCalendar -> UserDto.Response.from(userCalendar.getUser()))
-			.collect(Collectors.toList());
-	}
-
 	@Transactional
 	public void exit(UserCalendarDto.Request request) {
-
 		Long userId = request.getUserId();
 		// 해당 사용자가 캘린더의 멤버인지 확인
 		UserCalendar userCalendar = commonService.getUserCalendar(userId, request.getCalendarId());
@@ -104,6 +93,17 @@ public class CalendarMemberService {
 		exitCalendar(userId, calendar.getId());
 	}
 
+	public List<UserDto.Response> memberList(Long userId, Long calendarId) {
+		// 해당 캘린더의 멤버인지 확인
+		commonService.checkCalendarMember(userId, calendarId);
+
+		List<UserCalendar> userCalendars = userCalendarRepository.findByCalendarId(calendarId);
+
+		return userCalendars.stream()
+			.map(userCalendar -> UserDto.Response.from(userCalendar.getUser()))
+			.collect(Collectors.toList());
+	}
+
 	@Transactional
 	public void transferMasterAndExit(UserCalendarDto.Request request) {
 		Long userId = request.getUserId();
@@ -113,7 +113,7 @@ public class CalendarMemberService {
 		// 해당 사용자 권한이 MASTER 인지 확인
 		commonService.checkCalendarMaster(userId, calendarId);
 
-		changeMaster(newMasterId, calendarId);
+		changeMaster(userId, newMasterId, calendarId);
 
 		exitCalendar(userId, calendarId);
 
@@ -126,8 +126,11 @@ public class CalendarMemberService {
 	}
 
 	@Transactional
-	private void changeMaster(Long newMasterId, Long calendarId) {
-		// TODO : 관리자를 제외한 캘린더 멤버 목록에 있는 유저인지 확인하기
+	private void changeMaster(Long userId, Long newMasterId, Long calendarId) {
+		// 권한 양도하려는 사용자가 본인이면 안되므로 확인
+		if (newMasterId == userId) {
+			throw new CalendarException(SELF_PERMISSION_TRANSFER);
+		}
 
 
 		UserCalendar userCalendar = commonService.getUserCalendar(newMasterId, calendarId);
