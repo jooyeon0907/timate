@@ -1,6 +1,8 @@
 package com.zerobase.timate.controller;
 
 
+import static com.zerobase.timate.type.SuccessCode.DELETE_SUCCESS;
+
 import com.zerobase.timate.dto.ApiResponse;
 import com.zerobase.timate.dto.CalendarDto;
 import com.zerobase.timate.dto.CalendarDto.ValidationGroups;
@@ -58,7 +60,7 @@ public class CalendarController {
 	public ResponseEntity<ApiResponse> delete(@PathVariable Long id) {
 		Long userId = authService.getAuthenticatedUserId();
 		calendarService.delete(userId, id);
-		return ResponseEntity.ok(ApiResponse.success("삭제되었습니다."));
+		return ResponseEntity.ok(ApiResponse.success(DELETE_SUCCESS));
 	}
 
 }

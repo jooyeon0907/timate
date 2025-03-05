@@ -55,8 +55,7 @@ public class AuthController {
 		Authentication authentication = authenticationManager.authenticate(
 			new UsernamePasswordAuthenticationToken(form.getEmail(), form.getPassword()));
 
-		Long userId = commonService.getUserIdByEmail(form.getEmail());
-		String token = tokenProvider.generateToken(form.getEmail(), userId);
+		String token = tokenProvider.generateToken(form.getEmail());
         return ResponseEntity.ok(token);
     }
 
