@@ -3,19 +3,17 @@ package com.zerobase.timate.controller;
 
 import static com.zerobase.timate.type.SuccessCode.EMAIL_AUTH_SUCCESS;
 import static com.zerobase.timate.type.SuccessCode.LOGOUT_SUCCESS;
-import static com.zerobase.timate.type.SuccessCode.SIGNUP_SUCCESS;
 
 import com.zerobase.timate.dto.ApiResponse;
 import com.zerobase.timate.dto.SignInForm;
 import com.zerobase.timate.dto.SignUpForm;
-import com.zerobase.timate.service.AuthService;
 import com.zerobase.timate.security.TokenProvider;
+import com.zerobase.timate.service.AuthService;
 import com.zerobase.timate.service.CommonService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -54,8 +52,8 @@ public class AuthController {
 	@PostMapping("/sign-in")
     public ResponseEntity<String> login(@Valid @RequestBody SignInForm form) {
 		// 사용자 인증
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(form.getEmail(), form.getPassword()));
+		Authentication authentication = authenticationManager.authenticate(
+			new UsernamePasswordAuthenticationToken(form.getEmail(), form.getPassword()));
 
 		Long userId = commonService.getUserIdByEmail(form.getEmail());
 		String token = tokenProvider.generateToken(form.getEmail(), userId);
@@ -71,8 +69,8 @@ public class AuthController {
 
     @GetMapping("/me")
     public ResponseEntity<String> getCurrentUser(@AuthenticationPrincipal UserDetails userDetails) {
-        // 현재 로그인된 사용자 정보 (userDetails) 확인 가능
-        String username = userDetails.getUsername();
+		// 현재 로그인된 사용자 정보 (userDetails) 확인 가능
+		String username = userDetails.getUsername();
 		return ResponseEntity.ok("Hello " + username);
     }
 

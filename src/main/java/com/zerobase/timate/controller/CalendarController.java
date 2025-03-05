@@ -9,57 +9,56 @@ import com.zerobase.timate.service.CalendarService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/calendar")
+@RequestMapping("/calendars")
 @RequiredArgsConstructor
 public class CalendarController {
 
 	private final CalendarService calendarService;
 	private final AuthService authService;
 
-//    - 캘린더 나가기
-
-
-	@PostMapping("/create")
+	@PostMapping
 	public ResponseEntity<ApiResponse> create(@Validated(ValidationGroups.Create.class)
 												@RequestBody CalendarDto.Request request) {
 		request.setUserId(authService.getAuthenticatedUserId());
 		return ResponseEntity.ok(ApiResponse.success(calendarService.create(request)));
 	}
 
-	@GetMapping("/list")
+	@GetMapping
 	public ResponseEntity<ApiResponse> list() {
-		return ResponseEntity.ok(ApiResponse.success(calendarService.list(authService.getAuthenticatedUserId())));
+		Long userId = authService.getAuthenticatedUserId();
+		return ResponseEntity.ok(ApiResponse.success(calendarService.list(userId)));
 	}
 
-	@GetMapping("/read")
-	public ResponseEntity<ApiResponse> read(@RequestParam Long id) {
-		return ResponseEntity.ok(ApiResponse.success(calendarService.read(id, authService.getAuthenticatedUserId())));
+	@GetMapping("/{id}")
+	public ResponseEntity<ApiResponse> read(@PathVariable Long id) {
+		Long userId = authService.getAuthenticatedUserId();
+		return ResponseEntity.ok(ApiResponse.success(calendarService.read(userId, id)));
 	}
 
-	@PostMapping("/update")
-	public ResponseEntity<ApiResponse> update(@Validated(ValidationGroups.Update.class)
+	@PutMapping("/{id}")
+	public ResponseEntity<ApiResponse> update(@PathVariable Long id,
+												@Validated(ValidationGroups.Update.class)
 												@RequestBody CalendarDto.Request request) {
 		request.setUserId(authService.getAuthenticatedUserId());
+		request.setId(id);
 		return ResponseEntity.ok(ApiResponse.success(calendarService.update(request)));
 	}
 
-	@PostMapping("/delete")
-	public ResponseEntity<ApiResponse> delete(@Validated(ValidationGroups.Delete.class)
-												@RequestBody CalendarDto.Request request) {
-		request.setUserId(authService.getAuthenticatedUserId());
-		calendarService.delete(request);
+	@DeleteMapping("/{id}")
+	public ResponseEntity<ApiResponse> delete(@PathVariable Long id) {
+		Long userId = authService.getAuthenticatedUserId();
+		calendarService.delete(userId, id);
 		return ResponseEntity.ok(ApiResponse.success("삭제되었습니다."));
 	}
-
-
-
 
 }

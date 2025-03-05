@@ -44,8 +44,6 @@ public class TokenProvider {
 									.setId(id.toString());
         return Jwts.builder()
 				.setClaims(claims)
-//				.setId(String.valueOf(id))
-//                .setSubject(email)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
                 .signWith(key, SignatureAlgorithm.HS256)
