@@ -4,7 +4,6 @@ import static com.zerobase.timate.type.ErrorCode.NOT_CALENDAR_MASTER;
 import static com.zerobase.timate.type.ErrorCode.NOT_CALENDAR_MEMBER;
 import static com.zerobase.timate.type.ErrorCode.USER_NOT_FOUND;
 
-import com.zerobase.timate.dto.UserDto;
 import com.zerobase.timate.entity.MemberRole;
 import com.zerobase.timate.entity.User;
 import com.zerobase.timate.entity.UserCalendar;
@@ -27,12 +26,6 @@ public class CommonService {
 	public User getUserById(Long userId) {
 		return userRepository.findById(userId)
 			.orElseThrow(() -> new AuthException(USER_NOT_FOUND));
-	}
-
-	public Long getUserIdByEmail(String email) {
-		User user = userRepository.findByEmail(email)
-			.orElseThrow(() -> new AuthException(USER_NOT_FOUND));
-		return user.getId();
 	}
 
 	public UserCalendar getUserCalendar(Long userId, Long calendarId) {

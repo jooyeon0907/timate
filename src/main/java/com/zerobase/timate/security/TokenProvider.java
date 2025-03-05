@@ -39,9 +39,8 @@ public class TokenProvider {
         this.key = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
     }
 
-    public String generateToken(String email, Long id) {
-		Claims claims = Jwts.claims().setSubject(email)
-									.setId(id.toString());
+    public String generateToken(String email) {
+		Claims claims = Jwts.claims().setSubject(email);
         return Jwts.builder()
 				.setClaims(claims)
                 .setIssuedAt(new Date())
