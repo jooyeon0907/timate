@@ -51,8 +51,6 @@ public class CalendarService {
 	}
 
 	public List<CalendarDto.Response> list(Long userId) {
-		// TODO: 캘린더 멤버인지 확인
-
 		List<UserCalendar> userCalendars = userCalendarRepository.findByUserId(userId);
 
 		return userCalendars.stream()
@@ -61,12 +59,12 @@ public class CalendarService {
 	}
 
 	public CalendarDto.Response read(Long userId, Long id) {
-		// TODO: 캘린더 멤버인지 확인
+		commonService.checkCalendarMember(userId, id);
 		return CalendarDto.Response.from(getCalendarById(id));
 	}
 
 	public CalendarDto.Response update(Request request) {
-		// TODO : 해당 캘린더의 권한이 MASTER 인지 확인
+		commonService.checkCalendarMaster(request.getUserId(), request.getId());
 
 		Calendar calendar = getCalendarById(request.getId());
 		calendar.setName(request.getName());
@@ -77,7 +75,7 @@ public class CalendarService {
 
 	@Transactional
 	public void delete(Long useId, Long id) {
-		// TODO : 해당 캘린더의 권한이 MASTER 인지 확인
+		commonService.checkCalendarMaster(useId, id);
 
 		Calendar calendar = getCalendarById(id);
 
