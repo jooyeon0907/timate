@@ -21,6 +21,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
 	private final JwtAuthenticationFilter jwtAuthenticationFilter;
+	private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -42,6 +43,11 @@ public class SecurityConfig {
 				session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // 세션 미사용
 			.addFilterBefore(this.jwtAuthenticationFilter,
 				UsernamePasswordAuthenticationFilter.class)
+		;
+
+		http
+			.exceptionHandling(exception -> exception
+				.authenticationEntryPoint(customAuthenticationEntryPoint))
 		;
 
 

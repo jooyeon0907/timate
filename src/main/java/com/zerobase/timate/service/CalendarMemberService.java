@@ -1,23 +1,30 @@
 package com.zerobase.timate.service;
 
 import static com.zerobase.timate.type.ErrorCode.CALENDAR_DELETION_REQUIRED;
+import static com.zerobase.timate.type.ErrorCode.CANNOT_INVITE_TO_PERSONAL_CALENDAR;
 import static com.zerobase.timate.type.ErrorCode.EXISTS_CALENDAR_MEMBER;
+import static com.zerobase.timate.type.ErrorCode.INVALID_INVITATION_LINK;
 import static com.zerobase.timate.type.ErrorCode.MEMBER_LIST_REQUIRED;
 import static com.zerobase.timate.type.ErrorCode.SELF_PERMISSION_TRANSFER;
 
 import com.zerobase.timate.dto.UserCalendarDto;
 import com.zerobase.timate.dto.UserDto;
 import com.zerobase.timate.entity.Calendar;
+import com.zerobase.timate.entity.CalendarType;
 import com.zerobase.timate.entity.MemberRole;
 import com.zerobase.timate.entity.User;
 import com.zerobase.timate.entity.UserCalendar;
 import com.zerobase.timate.entity.UserCalendarId;
 import com.zerobase.timate.exception.CalendarException;
 import com.zerobase.timate.repository.UserCalendarRepository;
+import java.time.Duration;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +38,10 @@ public class CalendarMemberService {
 
 	private final UserCalendarRepository userCalendarRepository;
 
+	private final StringRedisTemplate redisTemplate;
+
+	@Value("${SERVER_URL}")
+	private String serverUrl;
 
 	public UserCalendarDto.Response addMember(Long userId, Long calendarId) {
 
@@ -134,6 +145,59 @@ public class CalendarMemberService {
 		userCalendar.setRole(MemberRole.MASTER);
 		userCalendarRepository.save(userCalendar);
 	}
+
+
+	/**
+	 * 초대 코드 생성
+	 */
+	public String generateInviteLink(Long userId, Long calendarId) {
+		// 해당 사용자가 캘린더의 멤버인지 확인
+		UserCalendar userCalendar = commonService.getUserCalendar(userId, calendarId);
+		if (userCalendar.getCalendar().getType().equals(CalendarType.PRIVATE)) {
+			throw new CalendarException(CANNOT_INVITE_TO_PERSONAL_CALENDAR);
+		}
+
+		String calendarUuid = UUID.randomUUID().toString();
+        String redisKey = getInvitationRedisKey(calendarUuid);
+
+        // Redis에 초대 코드 저장 (유효기간 24시간)
+        redisTemplate.opsForValue().set(redisKey, calendarId.toString(), Duration.ofHours(24));
+
+        return "http://" + serverUrl + "/calendars/" + calendarId + "/members/invitation?code=" + calendarUuid;
+	}
+
+	/**
+	 * 초대 링크 검증
+	 */
+	public Long validateInvitation(String inviteCode) {
+		String redisKey = getInvitationRedisKey(inviteCode);
+		String calendarId = redisTemplate.opsForValue().get(redisKey);
+
+		if (calendarId == null) {
+			throw new CalendarException(INVALID_INVITATION_LINK);
+		}
+
+		return Long.parseLong(calendarId);
+	}
+
+	/**
+	 * 초대 코드 사용 후 삭제
+	 */
+	public void acceptInvitation(Long userId, String inviteCode) {
+		Long calendarId = validateInvitation(inviteCode);
+
+		// 초대 링크로 접속한 유저를 캘린더 멤버로 추가
+		addMember(userId, calendarId);
+
+		// 초대 코드 삭제
+		redisTemplate.delete(getInvitationRedisKey(inviteCode));
+
+	}
+
+	private String getInvitationRedisKey(String inviteCode) {
+		return "invite:" + inviteCode;
+	}
+
 
 
 
