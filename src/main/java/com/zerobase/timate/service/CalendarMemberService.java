@@ -32,9 +32,7 @@ public class CalendarMemberService {
 	private final UserCalendarRepository userCalendarRepository;
 
 
-	public UserCalendarDto.Response create(UserCalendarDto.Request request) {
-		Long userId = request.getUserId();
-		Long calendarId = request.getCalendarId();
+	public UserCalendarDto.Response addMember(Long userId, Long calendarId) {
 
 		log.info("캘린더 멤버 추가 요청 - userId: {}, calendarId: {}", userId, calendarId);
 		User user = commonService.getUserById(userId);
@@ -52,7 +50,7 @@ public class CalendarMemberService {
 			.id(userCalendarId)
 			.user(user)
 			.calendar(calendar)
-			.role(request.getRole())
+			.role(MemberRole.MEMBER)
 			.build();
 		userCalendarRepository.save(userCalendar);
 		log.info("캘린더 멤버 추가 완료! - userId: {}, calendarId: {}", user.getId(), calendar.getId());
@@ -61,11 +59,21 @@ public class CalendarMemberService {
 
 	}
 
+	public List<UserDto.Response> memberList(Long userId, Long calendarId) {
+		// 해당 캘린더의 멤버인지 확인
+		commonService.checkCalendarMember(userId, calendarId);
+
+		List<UserCalendar> userCalendars = userCalendarRepository.findByCalendarId(calendarId);
+
+		return userCalendars.stream()
+			.map(userCalendar -> UserDto.Response.from(userCalendar.getUser()))
+			.collect(Collectors.toList());
+	}
+
 	@Transactional
-	public void exit(UserCalendarDto.Request request) {
-		Long userId = request.getUserId();
+	public void exit(Long userId, Long calendarId) {
 		// 해당 사용자가 캘린더의 멤버인지 확인
-		UserCalendar userCalendar = commonService.getUserCalendar(userId, request.getCalendarId());
+		UserCalendar userCalendar = commonService.getUserCalendar(userId, calendarId);
 
 		Calendar calendar = userCalendar.getCalendar();
 
@@ -91,17 +99,6 @@ public class CalendarMemberService {
 
 		// 일반 멤버라면 단순 나가기
 		exitCalendar(userId, calendar.getId());
-	}
-
-	public List<UserDto.Response> memberList(Long userId, Long calendarId) {
-		// 해당 캘린더의 멤버인지 확인
-		commonService.checkCalendarMember(userId, calendarId);
-
-		List<UserCalendar> userCalendars = userCalendarRepository.findByCalendarId(calendarId);
-
-		return userCalendars.stream()
-			.map(userCalendar -> UserDto.Response.from(userCalendar.getUser()))
-			.collect(Collectors.toList());
 	}
 
 	@Transactional

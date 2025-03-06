@@ -32,11 +32,8 @@ public class CalendarMemberController {
 	// TODO: 초대 링크 생성
 
 	@PostMapping
-	public ResponseEntity<ApiResponse> addMember(@PathVariable Long calendarId,
-												@RequestBody UserCalendarDto.Request request) {
-		request.setCalendarId(calendarId);
-		request.setUserId(authService.getAuthenticatedUserId());
-		return ResponseEntity.ok(ApiResponse.success(calendarMemberService.create(request)));
+	public ResponseEntity<ApiResponse> addMember(@PathVariable Long calendarId) {
+		return ResponseEntity.ok(ApiResponse.success(calendarMemberService.addMember(authService.getAuthenticatedUserId(), calendarId)));
 	}
 
 	@GetMapping
@@ -45,11 +42,8 @@ public class CalendarMemberController {
 	}
 
 	@DeleteMapping("/exit")
-	public ResponseEntity<ApiResponse> exit(@PathVariable Long calendarId,
-											@RequestBody UserCalendarDto.Request request) {
-		request.setCalendarId(calendarId);
-		request.setUserId(authService.getAuthenticatedUserId());
-		calendarMemberService.exit(request);
+	public ResponseEntity<ApiResponse> exit(@PathVariable Long calendarId) {
+		calendarMemberService.exit(authService.getAuthenticatedUserId(), calendarId);
 		return ResponseEntity.ok(ApiResponse.success(CALENDAR_EXIT_SUCCESS));
 	}
 

@@ -19,7 +19,7 @@ public enum ErrorCode {
 	EXISTS_CALENDAR_MEMBER("해당 캘린더에 이미 초대된 멤버입니다."),
     MEMBER_LIST_REQUIRED("새로운 캘린더 관리자를 선택해야 합니다."),
     SELF_PERMISSION_TRANSFER("본인에게 권한 양도를 할 수 없습니다."),
-	CALENDAR_DELETION_REQUIRED("캘린더에 1명만 남았습니다. 해당 캘린더는 삭제됩니다."),
+	CALENDAR_DELETION_REQUIRED("캘린더에 한 명만 남아있는 경우, 해당 캘린더는 삭제됩니다."),
 	NOT_CALENDAR_MEMBER("해당 사용자는 이 캘린더의 멤버가 아닙니다."),
 	NOT_CALENDAR_MASTER("해당 사용자는 이 캘린더의 관리자가 아닙니다.")
 	;

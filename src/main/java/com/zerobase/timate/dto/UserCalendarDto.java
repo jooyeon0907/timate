@@ -25,7 +25,6 @@ public class UserCalendarDto {
 
 		private Long calendarId;
 		private Long userId;
-		private MemberRole role;
 		@NotNull(groups = ChangeMaster.class)
 		private Long newMasterId;
 
