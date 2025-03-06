@@ -1,8 +1,8 @@
 package com.zerobase.timate.service;
 
-import static com.zerobase.timate.type.ErrorCode.ALREADY_AUTH;
+import static com.zerobase.timate.type.ErrorCode.ALREADY_EMAIL_AUTH;
 import static com.zerobase.timate.type.ErrorCode.ALREADY_USER;
-import static com.zerobase.timate.type.ErrorCode.FAILED_AUTH;
+import static com.zerobase.timate.type.ErrorCode.FAILED_EMAIL_AUTH;
 
 import com.zerobase.timate.compoent.MailComponent;
 import com.zerobase.timate.dto.SignUpForm;
@@ -62,11 +62,11 @@ public class AuthService implements UserDetailsService {
 
 	public void emailAuth(String uuid) {
 		User user = userRepository.findByEmailAuthKey(uuid).orElseThrow(
-			() -> new AuthException(FAILED_AUTH)
+			() -> new AuthException(FAILED_EMAIL_AUTH)
 		);
 
 		if (user.isEmailAuthYn()) {
-			throw new AuthException(ALREADY_AUTH);
+			throw new AuthException(ALREADY_EMAIL_AUTH);
 		}
 
 		user.setEmailAuthYn(true);
