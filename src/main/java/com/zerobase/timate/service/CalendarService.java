@@ -53,7 +53,7 @@ public class CalendarService {
 	public List<CalendarDto.Response> list(Long userId) {
 		// TODO: 캘린더 멤버인지 확인
 
-		List<UserCalendar> userCalendars = userCalendarRepository.findByUserId(userId);
+		List<UserCalendar> userCalendars = userCalendarRepository.findUserCalendarsWithCalendars(userId);
 
 		return userCalendars.stream()
 			.map(userCalendar -> CalendarDto.Response.from(userCalendar.getCalendar()))
