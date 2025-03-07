@@ -3,18 +3,17 @@ package com.zerobase.timate.controller;
 
 import static com.zerobase.timate.type.SuccessCode.EMAIL_AUTH_SUCCESS;
 import static com.zerobase.timate.type.SuccessCode.LOGOUT_SUCCESS;
-import static com.zerobase.timate.type.SuccessCode.SIGNUP_SUCCESS;
 
 import com.zerobase.timate.dto.ApiResponse;
 import com.zerobase.timate.dto.SignInForm;
 import com.zerobase.timate.dto.SignUpForm;
-import com.zerobase.timate.service.AuthService;
 import com.zerobase.timate.security.TokenProvider;
+import com.zerobase.timate.service.AuthService;
+import com.zerobase.timate.service.CommonService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -33,6 +32,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
 	private final AuthService authService;
+	private final CommonService commonService;
     private final AuthenticationManager authenticationManager;
     private final TokenProvider tokenProvider;
 
@@ -56,7 +56,7 @@ public class AuthController {
 			new UsernamePasswordAuthenticationToken(form.getEmail(), form.getPassword()));
 
 		String token = tokenProvider.generateToken(form.getEmail());
-		return ResponseEntity.ok(token);
+        return ResponseEntity.ok(token);
     }
 
 	@PostMapping("/logout")

@@ -2,6 +2,7 @@ package com.zerobase.timate.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.zerobase.timate.entity.User;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,6 +17,7 @@ public class UserDto {
 	@Getter
 	@Setter
 	@AllArgsConstructor
+	@Schema(name = "UserRequestDto", description = "사용자 요청 DTO")
 	public static class Request {
 		private Long id;
 		@NotNull(message = "이름은 필수 항목입니다.", groups = {UpdateGroup.class})

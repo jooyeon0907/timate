@@ -9,11 +9,14 @@ import com.zerobase.timate.dto.SignUpForm;
 import com.zerobase.timate.dto.UserDto;
 import com.zerobase.timate.entity.User;
 import com.zerobase.timate.exception.AuthException;
+import com.zerobase.timate.security.CustomUserDetails;
 import com.zerobase.timate.repository.UserRepository;
 import java.util.ArrayList;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -71,12 +74,20 @@ public class AuthService implements UserDetailsService {
 
 	}
 
+	// 인증된 사용자의 userId를 반환
+	public Long getAuthenticatedUserId() {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		CustomUserDetails user = (CustomUserDetails) authentication.getPrincipal();
+		return user.getId();
+	}
+
+
 	@Override
 	public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
 
 		User user = userRepository.findByEmail(email)
 			.orElseThrow(() -> new UsernameNotFoundException("회원 정보가 존재하지 않습니다."));
-		return new org.springframework.security.core.userdetails.User(user.getEmail(), user.getPassword(), new ArrayList<>());
+		return new CustomUserDetails(user.getId(), user.getEmail(), user.getPassword(), new ArrayList<>());
 	}
 
 

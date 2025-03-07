@@ -1,7 +1,11 @@
 package com.zerobase.timate.security;
 
 import com.zerobase.timate.service.AuthService;
-import io.jsonwebtoken.*;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import java.nio.charset.StandardCharsets;
@@ -19,6 +23,8 @@ import org.springframework.util.StringUtils;
 @RequiredArgsConstructor
 public class TokenProvider {
 
+	public static final String TOKEN_PREFIX = "Bearer ";
+
     @Value("${jwt.secret}")
     private String secretKey;
 
@@ -34,8 +40,9 @@ public class TokenProvider {
     }
 
     public String generateToken(String email) {
+		Claims claims = Jwts.claims().setSubject(email);
         return Jwts.builder()
-                .setSubject(email)
+				.setClaims(claims)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
                 .signWith(key, SignatureAlgorithm.HS256)
@@ -45,7 +52,7 @@ public class TokenProvider {
 	public boolean validateToken(String token){
 		if (!StringUtils.hasText(token)) return false; // 토큰이 유효하지 않다면 false 반환
 
-		var claims = this.paresClaims(token);
+		var claims = this.parseClaims(token);
 		return !claims.getExpiration().before(new Date()); // 토큰의 만료시간을 현재 시간과 비교하여 만료 여부 반환
 	}
 
@@ -55,16 +62,20 @@ public class TokenProvider {
     }
 
 	public String getUsername(String token) {
-		return this.paresClaims(token).getSubject();
+		return this.parseClaims(token).getSubject();
 	}
 
 	// 토큰이 유효한지 확인
-	private Claims paresClaims(String token) {
+	private Claims parseClaims(String token) {
 		try{
 			return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
 		} catch (ExpiredJwtException e){
         	return e.getClaims();
+		}catch (JwtException e) {
+			// JWT 관련 다른 예외 처리
+			throw new IllegalArgumentException("Invalid JWT token", e);
 		}
 	}
+
 
 }
