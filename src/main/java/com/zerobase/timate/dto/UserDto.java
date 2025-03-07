@@ -14,6 +14,7 @@ public class UserDto {
 	public interface UpdateGroup {}  // 수정 시 사용될 그룹
 
 	@Getter
+	@Setter
 	@AllArgsConstructor
 	public static class Request {
 		private Long id;
