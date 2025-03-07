@@ -28,14 +28,21 @@ public class SecurityConfig {
 		http
 			.csrf(csrf -> csrf.disable()) // CSRF 보호 비활성화
 			.authorizeHttpRequests(auth -> auth
-				.requestMatchers("/auth/sign-up", "/auth/sign-in" ).permitAll() // 로그인 & 회원가입은 허용
+				.requestMatchers(
+					"/auth/sign-up", "/auth/sign-in", // 로그인 & 회원가입은 허용
+					"/v3/api-docs/**",  // OpenAPI 문서
+					"/swagger-ui/**",   // Swagger UI 정적 리소스
+					"/swagger-ui.html"  // Swagger UI 메인 페이지
+				).permitAll()
 				.anyRequest().authenticated()) // 그 외 요청은 인증 필요
 			.formLogin(form -> form.disable())
 			.logout(logout -> logout.disable())
-			.httpBasic( hb -> hb.disable())
-			.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // 세션 미사용
-			.addFilterBefore(this.jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-        ;
+			.httpBasic(hb -> hb.disable())
+			.sessionManagement(
+				session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // 세션 미사용
+			.addFilterBefore(this.jwtAuthenticationFilter,
+				UsernamePasswordAuthenticationFilter.class)
+		;
 
 
 		return http.build();

@@ -3,6 +3,7 @@ package com.zerobase.timate.controller;
 
 import com.zerobase.timate.dto.ApiResponse;
 import com.zerobase.timate.dto.UserDto;
+import com.zerobase.timate.dto.UserDto.UpdateGroup;
 import com.zerobase.timate.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -27,7 +28,9 @@ public class UserController {
 	}
 
 	@PutMapping("/{id}")
-	public ResponseEntity<ApiResponse> update(@PathVariable Long id, @Validated @RequestBody UserDto.Request request) {
+	public ResponseEntity<ApiResponse> update(@PathVariable Long id, 
+						  @Validated(UpdateGroup.class) @RequestBody UserDto.Request request) {
+		request.setId(id);
 		return ResponseEntity.ok(ApiResponse.success(userService.updateUser(request)));
 	}
 
