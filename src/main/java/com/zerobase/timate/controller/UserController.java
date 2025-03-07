@@ -22,18 +22,16 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController {
 
 	private final UserService userService;
-	private final AuthService authService;
 
-	@GetMapping("/me")
-	public ResponseEntity<ApiResponse> info() {
-		Long userId = authService.getAuthenticatedUserId();
-		return ResponseEntity.ok(ApiResponse.success(userService.getUser(userId)));
+	@GetMapping("/{id}")
+	public ResponseEntity<ApiResponse> info(@PathVariable Long id) {
+		return ResponseEntity.ok(ApiResponse.success(userService.getUserInfo(id)));
 	}
 
 	@PutMapping("/{id}")
 	public ResponseEntity<ApiResponse> update(@PathVariable Long id,
-											@Validated (UpdateGroup.class) @RequestBody UserDto.Request request) {
-		request.setId(authService.getAuthenticatedUserId());
+						  @Validated(UpdateGroup.class) @RequestBody UserDto.Request request) {
+		request.setId(id);
 		return ResponseEntity.ok(ApiResponse.success(userService.updateUser(request)));
 	}
 
