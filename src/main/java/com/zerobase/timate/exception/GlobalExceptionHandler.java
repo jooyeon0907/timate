@@ -22,21 +22,21 @@ public class GlobalExceptionHandler {
 
 	@ExceptionHandler(AuthException.class)
 	public ResponseEntity<ApiResponse> handleAccountException(AuthException e){
-		log.error("{} is AuthException occurred.", e.getErrorMessage());
+		log.error("{} is AuthException occurred.", e.getErrorMessage(), e);
 
 		return ResponseEntity.badRequest().body(ApiResponse.error(e.getErrorCode()));
 	}
 
 	@ExceptionHandler(UserException.class)
 	public ResponseEntity<ApiResponse> handleUserException(UserException e){
-		log.error("{} is UserException occurred.", e.getErrorMessage());
+		log.error("{} is UserException occurred.", e.getErrorMessage(), e);
 
 		return ResponseEntity.badRequest().body(ApiResponse.error(e.getErrorCode()));
 	}
 
 	@ExceptionHandler(CalendarException.class)
 	public ResponseEntity<ApiResponse> handleCalendarException(CalendarException e){
-		log.error("{} is CalendarException occurred.", e.getErrorMessage());
+		log.error("{} is CalendarException occurred.", e.getErrorMessage(), e);
 
 		// 멤버 목록이 있을 경우, 멤버 목록을 함께 반환
 		if (e.getMembers() != null ){
@@ -82,7 +82,7 @@ public class GlobalExceptionHandler {
 
 	@ExceptionHandler(Exception.class)
 	public ResponseEntity<ApiResponse> handleException(Exception e){
-		log.error("{} is Exception occurred.", e.getMessage());
+		log.error("{} is Exception occurred.", e.getMessage(), e);
 
 		Map<String, String> errors = new HashMap<>();
     	errors.put("error", e.getMessage());
