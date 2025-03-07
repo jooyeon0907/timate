@@ -4,7 +4,6 @@ package com.zerobase.timate.controller;
 import com.zerobase.timate.dto.ApiResponse;
 import com.zerobase.timate.dto.UserDto;
 import com.zerobase.timate.dto.UserDto.UpdateGroup;
-import com.zerobase.timate.service.AuthService;
 import com.zerobase.timate.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
