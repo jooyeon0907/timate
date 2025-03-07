@@ -63,7 +63,7 @@ public class CalendarMemberService {
 		// 해당 캘린더의 멤버인지 확인
 		commonService.checkCalendarMember(userId, calendarId);
 
-		List<UserCalendar> userCalendars = userCalendarRepository.findByCalendarId(calendarId);
+		List<UserCalendar> userCalendars = userCalendarRepository.findByCalendarIdWithUser(calendarId);
 
 		return userCalendars.stream()
 			.map(userCalendar -> UserDto.Response.from(userCalendar.getUser()))
@@ -78,22 +78,20 @@ public class CalendarMemberService {
 		Calendar calendar = userCalendar.getCalendar();
 
 		// 관리자라면
-		if (userCalendar.getRole().equals(MemberRole.MASTER)){
+		if (userCalendar.getRole().equals(MemberRole.MASTER)) {
 			// 멤버 수 확인 (권한 양도를 위해서)
- 			List<UserCalendar> members = userCalendarRepository.findByCalendarId(calendar.getId());
+			List<UserCalendar> members = userCalendarRepository.findMembersExceptSelf(calendar.getId(), userId);
 
-            List<UserDto.Response> memberList = members.stream()
-                .filter(m -> !m.getUser().getId().equals(userId)) // 본인 제외
+			if (members.isEmpty()) {
+				// 본인만 남았다면 삭제 요청을 프론트에서 받도록 안내
+				throw new CalendarException(CALENDAR_DELETION_REQUIRED);
+			} else {
+				// 멤버 목록을 반환하여 프론트에서 새로운 생성자 선택
+				 List<UserDto.Response> memberList = members.stream()
                 .map(m -> UserDto.Response.from(m.getUser()))
                 .collect(Collectors.toList());
 
-			if (memberList.size() > 0) {
-				// 멤버 목록을 반환하여 프론트에서 새로운 생성자 선택
- 				throw new CalendarException(MEMBER_LIST_REQUIRED, memberList);
-
-			} else {
-				// 본인만 남았다면 삭제 요청을 프론트에서 받도록 안내
-				 throw new CalendarException(CALENDAR_DELETION_REQUIRED);
+				throw new CalendarException(MEMBER_LIST_REQUIRED, memberList);
 			}
 		}
 
