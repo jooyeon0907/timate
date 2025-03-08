@@ -24,7 +24,10 @@ public enum ErrorCode {
 	NOT_CALENDAR_MEMBER("해당 사용자는 이 캘린더의 멤버가 아닙니다."),
 	NOT_CALENDAR_MASTER("해당 사용자는 이 캘린더의 관리자가 아닙니다."),
 	CANNOT_INVITE_TO_PERSONAL_CALENDAR("개인용 캘린더는 멤버를 초대할 수 없습니다."),
-	INVALID_INVITATION_LINK("초대 링크가 만료되었거나 존재하지 않습니다.")
+	INVALID_INVITATION_LINK("초대 링크가 만료되었거나 존재하지 않습니다."),
+
+	SCHEDULE_NOT_FOUND("일정 정보가 존재하지 않습니다."),
+	INVALID_PERIOD("period는 monthly, weekly, 또는 daily 중 하나여야 합니다.")
 	;
 
 	private final String message;

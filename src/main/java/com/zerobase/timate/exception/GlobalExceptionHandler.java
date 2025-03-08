@@ -46,6 +46,13 @@ public class GlobalExceptionHandler {
 		return ResponseEntity.badRequest().body(ApiResponse.error(e.getErrorCode()));
 	}
 
+	@ExceptionHandler(ScheduleException.class)
+	public ResponseEntity<ApiResponse> handleScheduleException(ScheduleException e){
+		log.error("{} is ScheduleException occurred.", e.getErrorMessage(), e);
+
+		return ResponseEntity.badRequest().body(ApiResponse.error(e.getErrorCode()));
+	}
+
 	// DTO 유효성 검사 실패 예외 처리
 	@ExceptionHandler(MethodArgumentNotValidException.class)
 	public ResponseEntity<ApiResponse> handleMethodArgumentNotValidException(MethodArgumentNotValidException e){
