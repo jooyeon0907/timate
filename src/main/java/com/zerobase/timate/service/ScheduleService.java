@@ -5,14 +5,18 @@ import static com.zerobase.timate.type.ErrorCode.SCHEDULE_NOT_FOUND;
 
 import com.zerobase.timate.dto.ScheduleDto;
 import com.zerobase.timate.dto.ScheduleDto.Response;
+import com.zerobase.timate.dto.TodoItemDto;
 import com.zerobase.timate.entity.Calendar;
 import com.zerobase.timate.entity.Schedule;
+import com.zerobase.timate.entity.TodoItem;
 import com.zerobase.timate.entity.UserCalendar;
 import com.zerobase.timate.exception.ScheduleException;
 import com.zerobase.timate.repository.ScheduleRepository;
+import com.zerobase.timate.repository.TodoItemRepository;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -29,6 +33,7 @@ public class ScheduleService {
 	private final CommonService commonService;
 
 	private final ScheduleRepository scheduleRepository;
+	private final TodoItemRepository todoItemRepository;
 
 
 	@Transactional
@@ -36,8 +41,7 @@ public class ScheduleService {
 		Long userId = request.getUserId();
 		Long calendarId = request.getCalendarId();
 
-		UserCalendar userCalendar = commonService.getUserCalendar(userId, calendarId);
-		Calendar calendar = userCalendar.getCalendar();
+		Calendar calendar = commonService.getCalendar(userId, calendarId);
 
 		Schedule schedule = Schedule.builder()
 			.creatorId(userId)
@@ -51,13 +55,16 @@ public class ScheduleService {
 		// TODO: 장소 추가
 		scheduleRepository.save(schedule);
 
+		// 투두리스트 항목 저장
+		saveTodoItems(schedule, request.getTodoItems());
+
 		return ScheduleDto.Response.from(schedule);
 	}
 
 	public Map<?, List<Response>> getSchedulesByPeriod(
 		Long userId, Long calendarId, LocalDate referenceDate, String period) {
 
-		commonService.checkCalendarMember(userId, calendarId);
+		commonService.validateCalendarMember(userId, calendarId);
 
 		LocalDate startDate;
 		LocalDate endDate;
@@ -100,36 +107,45 @@ public class ScheduleService {
 	}
 
 	public ScheduleDto.Response read(Long userId, Long calendarId, Long id) {
-		commonService.checkCalendarMember(userId, calendarId);
-
-		return ScheduleDto.Response.from(getScheduleById(id));
+		return ScheduleDto.Response.withTodoFrom(commonService.getSchedule(userId, calendarId, id));
 	}
 
+	@Transactional
 	public ScheduleDto.Response update(ScheduleDto.Request request) {
-		commonService.checkCalendarMember(request.getUserId(), request.getCalendarId());
-
-		Schedule schedule = getScheduleById(request.getId());
+		Schedule schedule = commonService.getSchedule(request.getUserId(), request.getCalendarId(), request.getId());
 
 		if (request.getTitle() != null) schedule.setTitle(request.getTitle());
 		if (request.getStartDate() != null) schedule.setStartDate(request.getStartDate());
 		if (request.getStartDate() != null) schedule.setEndDate(request.getEndDate());
 		if (request.getMemo() != null) schedule.setMemo(request.getMemo());
+		if (request.getTodoItems().size() > 0) {
+			saveTodoItems(schedule, request.getTodoItems());
+			List<TodoItem> todoItems = new ArrayList<>();
+			for (TodoItemDto.Response todo: request.getTodoItems()) {
+				todoItems.add(new TodoItem(todo.getTask(), schedule));
+			}
+			todoItemRepository.saveAll(todoItems);
+		}
 		// TODO : 장소 추가
 
 		scheduleRepository.save(schedule);
 
-		return ScheduleDto.Response.from(schedule);
+		return ScheduleDto.Response.withTodoFrom(schedule);
 	}
 
 	@Transactional
-	public void delete(Long useId, Long calendarId, Long id) {
-		commonService.checkCalendarMaster(useId, calendarId);
-		scheduleRepository.delete(getScheduleById(id));
+	public void delete(Long userId, Long calendarId, Long id) {
+		scheduleRepository.delete(commonService.getSchedule(userId, calendarId, id));
 	}
 
-	private Schedule getScheduleById(Long id) {
-		return scheduleRepository.findById(id).
-			orElseThrow(() -> new ScheduleException(SCHEDULE_NOT_FOUND));
+	private void saveTodoItems(Schedule schedule, List<TodoItemDto.Response> todoItemDtoList){
+		if (todoItemDtoList == null) return;
+
+		List<TodoItem> todoItems = new ArrayList<>();
+		for (TodoItemDto.Response todo: todoItemDtoList) {
+			todoItems.add(new TodoItem(todo.getTask(), schedule));
+		}
+		todoItemRepository.saveAll(todoItems);
 	}
 
 }

@@ -59,14 +59,13 @@ public class CalendarService {
 	}
 
 	public CalendarDto.Response read(Long userId, Long id) {
-		commonService.checkCalendarMember(userId, id);
-		return CalendarDto.Response.from(getCalendarById(id));
+		return CalendarDto.Response.from(commonService.getCalendar(userId, id));
 	}
 
 	public CalendarDto.Response update(Request request) {
-		commonService.checkCalendarMaster(request.getUserId(), request.getId());
+		commonService.validateCalendarMaster(request.getUserId(), request.getId());
 
-		Calendar calendar = getCalendarById(request.getId());
+		Calendar calendar = commonService.getCalendar(request.getUserId(), request.getId());
 		calendar.setName(request.getName());
 		calendarRepository.save(calendar);
 
@@ -75,19 +74,14 @@ public class CalendarService {
 
 	@Transactional
 	public void delete(Long useId, Long id) {
-		commonService.checkCalendarMaster(useId, id);
+		commonService.validateCalendarMaster(useId, id);
 
-		Calendar calendar = getCalendarById(id);
+		Calendar calendar = commonService.getCalendar(useId, id);
 
 		userCalendarRepository.deleteByCalendarId(calendar.getId());
 
 		calendarRepository.deleteById(calendar.getId());
 
-	}
-
-	public Calendar getCalendarById(Long id) {
-		return calendarRepository.findById(id)
-			.orElseThrow(() -> new CalendarException(CALENDAR_NOT_FOUND));
 	}
 
 

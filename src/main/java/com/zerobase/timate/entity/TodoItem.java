@@ -34,4 +34,9 @@ public class TodoItem {
   @JoinColumn(name = "schedule_id")
   private Schedule schedule;
 
+  public TodoItem(String task, Schedule schedule) {
+    this.task = task;
+    this.schedule = schedule;
+  }
+
 }

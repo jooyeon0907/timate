@@ -17,6 +17,11 @@ public interface UserCalendarRepository extends JpaRepository<UserCalendar, Long
     @Query("SELECT uc FROM UserCalendar uc JOIN FETCH uc.calendar WHERE uc.user.id = :userId")
     List<UserCalendar> findUserCalendarsWithCalendars(Long userId);
 
+    @Query("SELECT uc FROM UserCalendar uc JOIN FETCH uc.user WHERE uc.calendar.id = :calendarId")
+	List<UserCalendar> findByCalendarIdWithUser(Long calendarId);
+
+	@Query("SELECT uc FROM UserCalendar uc JOIN FETCH uc.user WHERE uc.calendar.id = :calendarId AND uc.user.id != :userId")
+	List<UserCalendar> findMembersExceptSelf(Long calendarId, Long userId);
 
 }
 

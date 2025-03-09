@@ -3,11 +3,13 @@ package com.zerobase.timate.dto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.zerobase.timate.entity.Schedule;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.persistence.Column;
-import jakarta.validation.constraints.AssertFalse;
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -49,6 +51,8 @@ public class ScheduleDto {
 		private double latitude;
 		private double longitude;
 
+		private List<TodoItemDto.Response> todoItems;
+
 		@AssertTrue(message = "종료 날짜를 시작 날짜 이전으로 설정할 수 없습니다.",
 					groups = {ValidationGroups.Create.class, ValidationGroups.Common.class})
 		public boolean isEndDateValid() {
@@ -89,6 +93,8 @@ public class ScheduleDto {
 		@JsonProperty("longitude")
 		private double longitude;
 
+		private List<TodoItemDto.Response> todoItems;
+
 		public static Response from(Schedule schedule) {
 			return Response.builder()
 				.id(schedule.getId())
@@ -105,6 +111,28 @@ public class ScheduleDto {
 				.build();
 		}
 
+		public static Response withTodoFrom(Schedule schedule) {
+			List<TodoItemDto.Response> todoItems = Optional.ofNullable(schedule.getTodoItems())
+				.orElse(Collections.emptyList()) // null이면 빈 리스트 반환
+				.stream()
+				.map(TodoItemDto.Response::from)
+				.collect(Collectors.toList());
+
+			return Response.builder()
+				.id(schedule.getId())
+				.creatorId(schedule.getCreatorId())
+				.calendarId(schedule.getCalendar().getId())
+				.title(schedule.getTitle())
+				.startDate(schedule.getStartDate())
+				.endDate(schedule.getEndDate())
+				.memo(schedule.getMemo())
+				.placeName(schedule.getPlaceName())
+				.address(schedule.getAddress())
+				.latitude(schedule.getLatitude())
+				.longitude(schedule.getLongitude())
+				.todoItems(todoItems)
+				.build();
+		}
 	}
 
 }
