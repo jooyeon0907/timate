@@ -51,7 +51,7 @@ public class ScheduleDto {
 		private double latitude;
 		private double longitude;
 
-		private List<TodoItemDto.Response> todoItems;
+		private List<TodoItemDto.Request> todoItems;
 
 		@AssertTrue(message = "종료 날짜를 시작 날짜 이전으로 설정할 수 없습니다.",
 					groups = {ValidationGroups.Create.class, ValidationGroups.Common.class})

@@ -1,7 +1,7 @@
 package com.zerobase.timate.service;
 
 import static com.zerobase.timate.type.ErrorCode.INVALID_PERIOD;
-import static com.zerobase.timate.type.ErrorCode.SCHEDULE_NOT_FOUND;
+import static com.zerobase.timate.type.ErrorCode.TODO_NOT_FOUND;
 
 import com.zerobase.timate.dto.ScheduleDto;
 import com.zerobase.timate.dto.ScheduleDto.Response;
@@ -9,14 +9,12 @@ import com.zerobase.timate.dto.TodoItemDto;
 import com.zerobase.timate.entity.Calendar;
 import com.zerobase.timate.entity.Schedule;
 import com.zerobase.timate.entity.TodoItem;
-import com.zerobase.timate.entity.UserCalendar;
 import com.zerobase.timate.exception.ScheduleException;
 import com.zerobase.timate.repository.ScheduleRepository;
 import com.zerobase.timate.repository.TodoItemRepository;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -49,7 +47,6 @@ public class ScheduleService {
 			.title(request.getTitle())
 			.startDate(request.getStartDate())
 			.endDate(request.getEndDate())
-			// 아래 필수값이 아닌 것들은 값이 있는지 체크 한 후 저장할지
 			.memo(request.getMemo())
 			.build();
 		// TODO: 장소 추가
@@ -118,15 +115,11 @@ public class ScheduleService {
 		if (request.getStartDate() != null) schedule.setStartDate(request.getStartDate());
 		if (request.getStartDate() != null) schedule.setEndDate(request.getEndDate());
 		if (request.getMemo() != null) schedule.setMemo(request.getMemo());
-		if (request.getTodoItems().size() > 0) {
-			saveTodoItems(schedule, request.getTodoItems());
-			List<TodoItem> todoItems = new ArrayList<>();
-			for (TodoItemDto.Response todo: request.getTodoItems()) {
-				todoItems.add(new TodoItem(todo.getTask(), schedule));
-			}
-			todoItemRepository.saveAll(todoItems);
-		}
 		// TODO : 장소 추가
+
+		if (request.getTodoItems().size() > 0) {
+			updateTodoItems(request.getTodoItems(), schedule);
+		}
 
 		scheduleRepository.save(schedule);
 
@@ -138,13 +131,52 @@ public class ScheduleService {
 		scheduleRepository.delete(commonService.getSchedule(userId, calendarId, id));
 	}
 
-	private void saveTodoItems(Schedule schedule, List<TodoItemDto.Response> todoItemDtoList){
+	private void updateTodoItems(List<TodoItemDto.Request> updatedTodoItems, Schedule schedule) {
+		// 기존 투두 리스트
+		List<TodoItem> existingTodoItems = todoItemRepository.findByScheduleId(schedule.getId());
+
+		// 삭제된 항목 찾기 (기존 목록에 있었는데 새로운 목록에는 없는 것)
+		List<TodoItem> toDelete = existingTodoItems.stream()
+			.filter(todo -> updatedTodoItems.stream()
+					.noneMatch(updatedTodo -> updatedTodo.getId().equals(todo.getId()))
+			)
+			.toList();
+
+		// 삭제된 항목 제거
+		if (!toDelete.isEmpty()) {
+			todoItemRepository.deleteAllInBatch(toDelete);
+		}
+
+		// 기존 to do 목록 수정 또는 추가
+		List<TodoItem> toSave = updatedTodoItems.stream().map(updatedTodo -> {
+			if (updatedTodo.getId() == null) {
+				// 새로운 항목 추가
+				return new TodoItem(updatedTodo.getTask(), schedule);
+			}
+			// 기존 항목 수정
+			return existingTodoItems.stream()
+				.filter(todo -> todo.getId().equals(updatedTodo.getId()))
+				.findFirst()
+				.map(existingTodo -> {
+					existingTodo.setTask(updatedTodo.getTask());
+					return existingTodo;
+				})
+				.orElseThrow(() -> new ScheduleException(TODO_NOT_FOUND));
+		}).toList();
+
+		if (!toSave.isEmpty()) {
+			todoItemRepository.saveAll(toSave);
+		}
+
+	}
+
+	private void saveTodoItems(Schedule schedule, List<TodoItemDto.Request> todoItemDtoList){
 		if (todoItemDtoList == null) return;
 
-		List<TodoItem> todoItems = new ArrayList<>();
-		for (TodoItemDto.Response todo: todoItemDtoList) {
-			todoItems.add(new TodoItem(todo.getTask(), schedule));
-		}
+		List<TodoItem> todoItems = todoItemDtoList.stream()
+			.map(todo -> new TodoItem(todo.getTask(), schedule))
+			.toList();
+
 		todoItemRepository.saveAll(todoItems);
 	}
 
