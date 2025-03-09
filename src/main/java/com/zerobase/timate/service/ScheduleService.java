@@ -20,11 +20,12 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 
 @Slf4j
-@org.springframework.stereotype.Service
+@Service
 @RequiredArgsConstructor
 public class ScheduleService {
 
@@ -48,8 +49,11 @@ public class ScheduleService {
 			.startDate(request.getStartDate())
 			.endDate(request.getEndDate())
 			.memo(request.getMemo())
+			.placeName(request.getPlaceName())
+			.address(request.getAddress())
+			.latitude(request.getLatitude())
+			.longitude(request.getLongitude())
 			.build();
-		// TODO: 장소 추가
 		scheduleRepository.save(schedule);
 
 		// 투두리스트 항목 저장
@@ -115,7 +119,10 @@ public class ScheduleService {
 		if (request.getStartDate() != null) schedule.setStartDate(request.getStartDate());
 		if (request.getStartDate() != null) schedule.setEndDate(request.getEndDate());
 		if (request.getMemo() != null) schedule.setMemo(request.getMemo());
-		// TODO : 장소 추가
+		if (request.getPlaceName() != null) schedule.setPlaceName(request.getPlaceName());
+		if (request.getAddress() != null) schedule.setAddress(request.getAddress());
+		if (request.getLatitude() != 0.0) schedule.setLatitude(request.getLatitude());
+		if (request.getLongitude() != 0.0) schedule.setLongitude(request.getLongitude());
 
 		if (request.getTodoItems().size() > 0) {
 			updateTodoItems(request.getTodoItems(), schedule);
