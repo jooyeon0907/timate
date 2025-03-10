@@ -39,16 +39,8 @@ public class ScheduleService {
 		UserCalendar userCalendar = commonService.getUserCalendar(userId, calendarId);
 		Calendar calendar = userCalendar.getCalendar();
 
-		Schedule schedule = Schedule.builder()
-			.creatorId(userId)
-			.calendar(calendar)
-			.title(request.getTitle())
-			.startDate(request.getStartDate())
-			.endDate(request.getEndDate())
-			// 아래 필수값이 아닌 것들은 값이 있는지 체크 한 후 저장할지
-			.memo(request.getMemo())
-			.build();
-		// TODO: 장소 추가
+		Schedule schedule = Schedule.of(request, calendar);
+		// TODO: 장소, To-do 추가
 		scheduleRepository.save(schedule);
 
 		return ScheduleDto.Response.from(schedule);
@@ -105,6 +97,7 @@ public class ScheduleService {
 		return ScheduleDto.Response.from(getScheduleById(id));
 	}
 
+	@Transactional
 	public ScheduleDto.Response update(ScheduleDto.Request request) {
 		commonService.checkCalendarMember(request.getUserId(), request.getCalendarId());
 
@@ -114,7 +107,7 @@ public class ScheduleService {
 		if (request.getStartDate() != null) schedule.setStartDate(request.getStartDate());
 		if (request.getStartDate() != null) schedule.setEndDate(request.getEndDate());
 		if (request.getMemo() != null) schedule.setMemo(request.getMemo());
-		// TODO : 장소 추가
+		// TODO: 장소, To-do 추가
 
 		scheduleRepository.save(schedule);
 
