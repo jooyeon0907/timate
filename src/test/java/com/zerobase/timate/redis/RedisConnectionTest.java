@@ -28,20 +28,6 @@ public class RedisConnectionTest {
         redisTemplate.opsForValue().set(key, value);
     }
 
-//    @Test
-//    public void testRedisConnection() {
-//        // Given
-//        String key = "testKey";
-//        String value = "Hello, Redis!";
-//
-//        // When
-//        redisTemplate.opsForValue().set(key, value);
-//        String result = redisTemplate.opsForValue().get(key);
-//
-//        // Then
-//        assertEquals(value, result);
-//    }
-
     @Test
     public void testRedisConnection() {
         String result = redisTemplate.opsForValue().get(key);

@@ -14,7 +14,6 @@ import com.zerobase.timate.entity.CalendarType;
 import com.zerobase.timate.entity.MemberRole;
 import com.zerobase.timate.entity.User;
 import com.zerobase.timate.entity.UserCalendar;
-import com.zerobase.timate.entity.UserCalendarId;
 import com.zerobase.timate.exception.CalendarException;
 import com.zerobase.timate.repository.UserCalendarRepository;
 import java.time.Duration;
@@ -24,7 +23,7 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,7 +37,7 @@ public class CalendarMemberService {
 
 	private final UserCalendarRepository userCalendarRepository;
 
-	private final StringRedisTemplate redisTemplate;
+	private final RedisTemplate<String, Long> redisTemplate;
 
 	@Value("${SERVER_URL}")
 	private String serverUrl;
@@ -145,7 +144,7 @@ public class CalendarMemberService {
 	public String generateInviteLink(Long userId, Long calendarId) {
 		// 해당 사용자가 캘린더의 멤버인지 확인
 		UserCalendar userCalendar = commonService.getUserCalendar(userId, calendarId);
-		if (userCalendar.getCalendar().getType().equals(CalendarType.PRIVATE)) {
+		if (userCalendar.getCalendar().getType() == CalendarType.PRIVATE) {
 			throw new CalendarException(CANNOT_INVITE_TO_PERSONAL_CALENDAR);
 		}
 
@@ -153,7 +152,7 @@ public class CalendarMemberService {
         String redisKey = getInvitationRedisKey(calendarUuid);
 
         // Redis에 초대 코드 저장 (유효기간 24시간)
-        redisTemplate.opsForValue().set(redisKey, calendarId.toString(), Duration.ofHours(24));
+        redisTemplate.opsForValue().set(redisKey, calendarId, Duration.ofHours(24));
 
         return "http://" + serverUrl + "/calendars/" + calendarId + "/members/invitation?code=" + calendarUuid;
 	}
@@ -162,14 +161,13 @@ public class CalendarMemberService {
 	 * 초대 링크 검증
 	 */
 	public Long validateInvitation(String inviteCode) {
-		String redisKey = getInvitationRedisKey(inviteCode);
-		String calendarId = redisTemplate.opsForValue().get(redisKey);
+		Long calendarId = redisTemplate.opsForValue().get(getInvitationRedisKey(inviteCode));
 
 		if (calendarId == null) {
 			throw new CalendarException(INVALID_INVITATION_LINK);
 		}
 
-		return Long.parseLong(calendarId);
+		return calendarId;
 	}
 
 	/**
