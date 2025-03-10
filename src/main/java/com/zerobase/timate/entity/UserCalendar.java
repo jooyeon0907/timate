@@ -41,4 +41,13 @@ public class UserCalendar {
   private MemberRole role; // 생성자, 일반멤버
 
 
+  public static UserCalendar of(User user, Calendar calendar, MemberRole role) {
+    return UserCalendar.builder()
+        .id(new UserCalendarId(calendar.getId(), user.getId())) // 복합키를 명시적으로 설정
+        .user(user)
+        .calendar(calendar)
+        .role(role)
+        .build();
+  }
+
 }

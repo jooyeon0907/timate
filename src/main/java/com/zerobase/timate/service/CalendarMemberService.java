@@ -45,14 +45,9 @@ public class CalendarMemberService {
 			throw new CalendarException(EXISTS_CALENDAR_MEMBER);
 		}
 
-		UserCalendarId userCalendarId = new UserCalendarId(calendarId, user.getId());
-		UserCalendar userCalendar = new UserCalendar().builder()
-			.id(userCalendarId)
-			.user(user)
-			.calendar(calendar)
-			.role(MemberRole.MEMBER)
-			.build();
+		UserCalendar userCalendar = UserCalendar.of(user, calendar, MemberRole.MEMBER);
 		userCalendarRepository.save(userCalendar);
+
 		log.info("캘린더 멤버 추가 완료! - userId: {}, calendarId: {}", user.getId(), calendar.getId());
 
 		return UserCalendarDto.Response.from(userCalendar);
@@ -114,7 +109,6 @@ public class CalendarMemberService {
 
 	}
 
-	@Transactional
 	private void exitCalendar(Long userId, Long calendarId) {
 		userCalendarRepository.deleteById_UserIdAndId_CalendarId(userId, calendarId);
 		log.info("캘린더 퇴장 완료 - userId: {}, calendarId: {}", userId, calendarId);
