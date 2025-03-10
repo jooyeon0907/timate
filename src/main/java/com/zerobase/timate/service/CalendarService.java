@@ -32,19 +32,11 @@ public class CalendarService {
 	public CalendarDto.Response create(Request request) {
 		User user = commonService.getUserById(request.getUserId());
 
-		Calendar calendar = Calendar.builder()
-			.name(request.getName())
-			.type(request.getType())
-			.build();
+		Calendar calendar = Calendar.of(request);
+
 		calendarRepository.save(calendar);
 
-		UserCalendarId userCalendarId = new UserCalendarId(user.getId(), calendar.getId());
-		UserCalendar userCalendar = new UserCalendar().builder()
-			.id(userCalendarId) // 복합키를 명시적으로 설정
-			.user(user)
-			.calendar(calendar)
-			.role(MemberRole.MASTER)
-			.build();
+		UserCalendar userCalendar = UserCalendar.of(user, calendar, MemberRole.MASTER);
 		userCalendarRepository.save(userCalendar);
 
 		return CalendarDto.Response.from(calendar);

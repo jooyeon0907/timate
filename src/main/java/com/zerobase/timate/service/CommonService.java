@@ -84,7 +84,7 @@ public class CommonService {
 
 	public void checkCalendarMaster(Long userId, Long calendarId) {
 		UserCalendar userCalendar = getUserCalendar(userId, calendarId);
-		 if (!userCalendar.getRole().equals(MemberRole.MASTER)) {
+		 if (userCalendar.getRole() != MemberRole.MASTER) {
 			 throw new CalendarException(NOT_CALENDAR_MASTER);
 		 }
 	}

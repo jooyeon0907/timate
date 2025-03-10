@@ -8,6 +8,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
@@ -18,9 +19,10 @@ import org.springframework.stereotype.Component;
 // -> SecurityConfig 에 추가 설정해야됨
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
-	private final ObjectMapper objectMapper = new ObjectMapper();
+	private final ObjectMapper objectMapper;
 
 	@Override
 	public void commence(HttpServletRequest request, HttpServletResponse response,
@@ -36,7 +38,7 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
 		response.getWriter().write(objectMapper.writeValueAsString(apiResponse));
 
 		// 상태 코드와 메시지를 로그로 출력 (디버깅용)
-		log.info("Response Status: " + response.getStatus());
-		log.info("Response Message: " + INVALID_USER_TOKEN.getMessage());
+		log.debug("Response Status: {}", response.getStatus());
+		log.debug("Response Status: {}", INVALID_USER_TOKEN.getMessage());
 	}
 }

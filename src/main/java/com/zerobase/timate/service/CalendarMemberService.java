@@ -14,7 +14,6 @@ import com.zerobase.timate.entity.CalendarType;
 import com.zerobase.timate.entity.MemberRole;
 import com.zerobase.timate.entity.User;
 import com.zerobase.timate.entity.UserCalendar;
-import com.zerobase.timate.entity.UserCalendarId;
 import com.zerobase.timate.exception.CalendarException;
 import com.zerobase.timate.repository.UserCalendarRepository;
 import java.time.Duration;
@@ -24,7 +23,7 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,7 +37,7 @@ public class CalendarMemberService {
 
 	private final UserCalendarRepository userCalendarRepository;
 
-	private final StringRedisTemplate redisTemplate;
+	private final RedisTemplate<String, Long> redisTemplate;
 
 	@Value("${SERVER_URL}")
 	private String serverUrl;
@@ -56,14 +55,9 @@ public class CalendarMemberService {
 			throw new CalendarException(EXISTS_CALENDAR_MEMBER);
 		}
 
-		UserCalendarId userCalendarId = new UserCalendarId(calendarId, user.getId());
-		UserCalendar userCalendar = new UserCalendar().builder()
-			.id(userCalendarId)
-			.user(user)
-			.calendar(calendar)
-			.role(MemberRole.MEMBER)
-			.build();
+		UserCalendar userCalendar = UserCalendar.of(user, calendar, MemberRole.MEMBER);
 		userCalendarRepository.save(userCalendar);
+
 		log.info("캘린더 멤버 추가 완료! - userId: {}, calendarId: {}", user.getId(), calendar.getId());
 
 		return UserCalendarDto.Response.from(userCalendar);
@@ -74,7 +68,7 @@ public class CalendarMemberService {
 		// 해당 캘린더의 멤버인지 확인
 		commonService.checkCalendarMember(userId, calendarId);
 
-		List<UserCalendar> userCalendars = userCalendarRepository.findByCalendarId(calendarId);
+		List<UserCalendar> userCalendars = userCalendarRepository.findByCalendarIdWithUser(calendarId);
 
 		return userCalendars.stream()
 			.map(userCalendar -> UserDto.Response.from(userCalendar.getUser()))
@@ -89,22 +83,20 @@ public class CalendarMemberService {
 		Calendar calendar = userCalendar.getCalendar();
 
 		// 관리자라면
-		if (userCalendar.getRole().equals(MemberRole.MASTER)){
+		if (userCalendar.getRole().equals(MemberRole.MASTER)) {
 			// 멤버 수 확인 (권한 양도를 위해서)
- 			List<UserCalendar> members = userCalendarRepository.findByCalendarId(calendar.getId());
+			List<UserCalendar> members = userCalendarRepository.findMembersExceptSelf(calendar.getId(), userId);
 
-            List<UserDto.Response> memberList = members.stream()
-                .filter(m -> !m.getUser().getId().equals(userId)) // 본인 제외
+			if (members.isEmpty()) {
+				// 본인만 남았다면 삭제 요청을 프론트에서 받도록 안내
+				throw new CalendarException(CALENDAR_DELETION_REQUIRED);
+			} else {
+				// 멤버 목록을 반환하여 프론트에서 새로운 생성자 선택
+				 List<UserDto.Response> memberList = members.stream()
                 .map(m -> UserDto.Response.from(m.getUser()))
                 .collect(Collectors.toList());
 
-			if (memberList.size() > 0) {
-				// 멤버 목록을 반환하여 프론트에서 새로운 생성자 선택
- 				throw new CalendarException(MEMBER_LIST_REQUIRED, memberList);
-
-			} else {
-				// 본인만 남았다면 삭제 요청을 프론트에서 받도록 안내
-				 throw new CalendarException(CALENDAR_DELETION_REQUIRED);
+				throw new CalendarException(MEMBER_LIST_REQUIRED, memberList);
 			}
 		}
 
@@ -127,7 +119,6 @@ public class CalendarMemberService {
 
 	}
 
-	@Transactional
 	private void exitCalendar(Long userId, Long calendarId) {
 		userCalendarRepository.deleteById_UserIdAndId_CalendarId(userId, calendarId);
 		log.info("캘린더 퇴장 완료 - userId: {}, calendarId: {}", userId, calendarId);
@@ -153,7 +144,7 @@ public class CalendarMemberService {
 	public String generateInviteLink(Long userId, Long calendarId) {
 		// 해당 사용자가 캘린더의 멤버인지 확인
 		UserCalendar userCalendar = commonService.getUserCalendar(userId, calendarId);
-		if (userCalendar.getCalendar().getType().equals(CalendarType.PRIVATE)) {
+		if (userCalendar.getCalendar().getType() == CalendarType.PRIVATE) {
 			throw new CalendarException(CANNOT_INVITE_TO_PERSONAL_CALENDAR);
 		}
 
@@ -161,7 +152,7 @@ public class CalendarMemberService {
         String redisKey = getInvitationRedisKey(calendarUuid);
 
         // Redis에 초대 코드 저장 (유효기간 24시간)
-        redisTemplate.opsForValue().set(redisKey, calendarId.toString(), Duration.ofHours(24));
+        redisTemplate.opsForValue().set(redisKey, calendarId, Duration.ofHours(24));
 
         return "http://" + serverUrl + "/calendars/" + calendarId + "/members/invitation?code=" + calendarUuid;
 	}
@@ -170,14 +161,13 @@ public class CalendarMemberService {
 	 * 초대 링크 검증
 	 */
 	public Long validateInvitation(String inviteCode) {
-		String redisKey = getInvitationRedisKey(inviteCode);
-		String calendarId = redisTemplate.opsForValue().get(redisKey);
+		Long calendarId = redisTemplate.opsForValue().get(getInvitationRedisKey(inviteCode));
 
 		if (calendarId == null) {
 			throw new CalendarException(INVALID_INVITATION_LINK);
 		}
 
-		return Long.parseLong(calendarId);
+		return calendarId;
 	}
 
 	/**
