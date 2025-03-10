@@ -38,6 +38,11 @@ public class GlobalExceptionHandler {
 	public ResponseEntity<ApiResponse> handleCalendarException(CalendarException e){
 		log.error("{} is CalendarException occurred.", e.getErrorMessage(), e);
 
+		// 멤버 목록이 있을 경우, 멤버 목록을 함께 반환
+		if (e.getMembers() != null ){
+			return ResponseEntity.badRequest().body(ApiResponse.error(e.getErrorCode(), e.getMembers()));
+		}
+
 		return ResponseEntity.badRequest().body(ApiResponse.error(e.getErrorCode()));
 	}
 

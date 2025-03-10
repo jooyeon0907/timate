@@ -1,6 +1,7 @@
 package com.zerobase.timate.entity;
 
 
+import com.zerobase.timate.dto.CalendarDto;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -33,5 +34,11 @@ public class Calendar {
   @Column(columnDefinition = "VARCHAR(10)", nullable = false)
   private CalendarType type; // 개인용, 공유용
 
+  public static Calendar of(CalendarDto.Request dto) {
+    return Calendar.builder()
+			.name(dto.getName())
+			.type(dto.getType())
+			.build();
+  }
 
 }

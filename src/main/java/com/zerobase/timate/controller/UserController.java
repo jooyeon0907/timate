@@ -28,7 +28,7 @@ public class UserController {
 	}
 
 	@PutMapping("/{id}")
-	public ResponseEntity<ApiResponse> update(@PathVariable Long id, 
+	public ResponseEntity<ApiResponse> update(@PathVariable Long id,
 						  @Validated(UpdateGroup.class) @RequestBody UserDto.Request request) {
 		request.setId(id);
 		return ResponseEntity.ok(ApiResponse.success(userService.updateUser(request)));

@@ -32,27 +32,17 @@ public class CalendarService {
 	public CalendarDto.Response create(Request request) {
 		User user = commonService.getUserById(request.getUserId());
 
-		Calendar calendar = Calendar.builder()
-			.name(request.getName())
-			.type(request.getType())
-			.build();
+		Calendar calendar = Calendar.of(request);
+
 		calendarRepository.save(calendar);
 
-		UserCalendarId userCalendarId = new UserCalendarId(user.getId(), calendar.getId());
-		UserCalendar userCalendar = new UserCalendar().builder()
-			.id(userCalendarId) // 복합키를 명시적으로 설정
-			.user(user)
-			.calendar(calendar)
-			.role(MemberRole.MASTER)
-			.build();
+		UserCalendar userCalendar = UserCalendar.of(user, calendar, MemberRole.MASTER);
 		userCalendarRepository.save(userCalendar);
 
 		return CalendarDto.Response.from(calendar);
 	}
 
 	public List<CalendarDto.Response> list(Long userId) {
-		// TODO: 캘린더 멤버인지 확인
-
 		List<UserCalendar> userCalendars = userCalendarRepository.findUserCalendarsWithCalendars(userId);
 
 		return userCalendars.stream()
@@ -61,12 +51,12 @@ public class CalendarService {
 	}
 
 	public CalendarDto.Response read(Long userId, Long id) {
-		// TODO: 캘린더 멤버인지 확인
+		commonService.checkCalendarMember(userId, id);
 		return CalendarDto.Response.from(getCalendarById(id));
 	}
 
 	public CalendarDto.Response update(Request request) {
-		// TODO : 해당 캘린더의 권한이 MASTER 인지 확인
+		commonService.checkCalendarMaster(request.getUserId(), request.getId());
 
 		Calendar calendar = getCalendarById(request.getId());
 		calendar.setName(request.getName());
@@ -77,7 +67,7 @@ public class CalendarService {
 
 	@Transactional
 	public void delete(Long useId, Long id) {
-		// TODO : 해당 캘린더의 권한이 MASTER 인지 확인
+		commonService.checkCalendarMaster(useId, id);
 
 		Calendar calendar = getCalendarById(id);
 
@@ -87,7 +77,7 @@ public class CalendarService {
 
 	}
 
-	private Calendar getCalendarById(Long id) {
+	public Calendar getCalendarById(Long id) {
 		return calendarRepository.findById(id)
 			.orElseThrow(() -> new CalendarException(CALENDAR_NOT_FOUND));
 	}

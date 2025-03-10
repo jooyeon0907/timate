@@ -24,7 +24,7 @@ public class CalendarDto {
 	@Getter
 	@Setter
 	@AllArgsConstructor
-	@Schema(name = "CalendarRequestDto", description = "일정 요청 DTO")
+	@Schema(name = "CalendarRequestDto", description = "캘린더 요청 DTO")
 	public static class Request {
 
 		private Long id;
