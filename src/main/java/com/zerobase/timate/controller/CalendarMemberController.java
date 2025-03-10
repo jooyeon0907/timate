@@ -2,6 +2,7 @@ package com.zerobase.timate.controller;
 
 
 import static com.zerobase.timate.type.SuccessCode.CALENDAR_EXIT_SUCCESS;
+import static com.zerobase.timate.type.SuccessCode.CALENDAR_INVITED;
 import static com.zerobase.timate.type.SuccessCode.MASTER_ROLE_TRANSFER_AND_EXIT_SUCCESS;
 
 import com.zerobase.timate.dto.ApiResponse;
@@ -9,6 +10,7 @@ import com.zerobase.timate.dto.UserCalendarDto;
 import com.zerobase.timate.dto.UserCalendarDto.ChangeMaster;
 import com.zerobase.timate.service.AuthService;
 import com.zerobase.timate.service.CalendarMemberService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -28,8 +30,6 @@ public class CalendarMemberController {
 	private final CalendarMemberService calendarMemberService;
 	private final AuthService authService;
 
-
-	// TODO: 초대 링크 생성
 
 	@PostMapping
 	public ResponseEntity<ApiResponse> addMember(@PathVariable Long calendarId) {
@@ -55,6 +55,19 @@ public class CalendarMemberController {
 		request.setUserId(authService.getAuthenticatedUserId());
 		calendarMemberService.transferMasterAndExit(request);
 		return ResponseEntity.ok(ApiResponse.success(MASTER_ROLE_TRANSFER_AND_EXIT_SUCCESS));
+	}
+
+
+	@GetMapping("/invitation-link")
+	public ResponseEntity<String> generateInviteLink(@PathVariable Long calendarId) {
+		return ResponseEntity.ok(calendarMemberService.generateInviteLink(
+			authService.getAuthenticatedUserId(), calendarId));
+	}
+
+	@GetMapping("/invitation")
+	public ResponseEntity<ApiResponse> acceptInvitation(HttpServletRequest request) {
+		calendarMemberService.acceptInvitation(authService.getAuthenticatedUserId(), request.getParameter("code"));
+		return ResponseEntity.ok(ApiResponse.success(CALENDAR_INVITED));
 	}
 
 }
