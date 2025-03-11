@@ -37,15 +37,10 @@ public class UserCalendarDto {
 	@Builder
 	public static class Response {
 
-		@JsonProperty("calendar_id")
 		private Long calendarId;
-		@JsonProperty("calendar_name")
 		private String calendarName;
-		@JsonProperty("user_id")
 		private Long userId;
-		@JsonProperty("user_name")
 		private String userName;
-		@JsonProperty("role")
 		private MemberRole role;
 
 		public static Response from(UserCalendar uc) {

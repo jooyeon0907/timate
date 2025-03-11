@@ -6,6 +6,7 @@ import static com.zerobase.timate.type.SuccessCode.DELETE_SUCCESS;
 import com.zerobase.timate.dto.ApiResponse;
 import com.zerobase.timate.dto.ScheduleDto;
 import com.zerobase.timate.dto.ScheduleDto.ValidationGroups;
+import com.zerobase.timate.entity.PeriodType;
 import com.zerobase.timate.service.AuthService;
 import com.zerobase.timate.service.ScheduleService;
 import java.time.LocalDate;
@@ -48,7 +49,7 @@ public class ScheduleController {
 											@RequestParam String period) {
 		Long userId = authService.getAuthenticatedUserId();
 		return ResponseEntity.ok(
-			ApiResponse.success(scheduleService.getSchedulesByPeriod(userId, calendarId, date, period)));
+			ApiResponse.success(scheduleService.getSchedulesByPeriod(userId, calendarId, date, PeriodType.fromString(period))));
 	}
 
 	@GetMapping("/{id}")

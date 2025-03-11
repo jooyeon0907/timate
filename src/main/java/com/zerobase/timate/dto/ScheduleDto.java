@@ -65,28 +65,17 @@ public class ScheduleDto {
 	@Builder
 	public static class Response {
 
-		@JsonProperty("id")
 		private Long id;
-		@JsonProperty("creator_id")
 		private Long creatorId;
-		@JsonProperty("calendar_id")
 		private Long calendarId;
-		@JsonProperty("title")
 		private String title;
-		@JsonProperty("start_date")
 		private LocalDateTime startDate;
-		@JsonProperty("end_date")
 		private LocalDateTime endDate;
-		@JsonProperty("memo")
 		private String memo;
 
-		@JsonProperty("place_name")
 		private String placeName;
-		@JsonProperty("address")
 		private String address;
-		@JsonProperty("latitude")
 		private double latitude;
-		@JsonProperty("longitude")
 		private double longitude;
 
 		public static Response from(Schedule schedule) {
