@@ -83,7 +83,7 @@ public class CalendarMemberService {
 		Calendar calendar = userCalendar.getCalendar();
 
 		// 관리자라면
-		if (userCalendar.getRole().equals(MemberRole.MASTER)) {
+		if (userCalendar.getRole() == MemberRole.MASTER) {
 			// 멤버 수 확인 (권한 양도를 위해서)
 			List<UserCalendar> members = userCalendarRepository.findMembersExceptSelf(calendar.getId(), userId);
 

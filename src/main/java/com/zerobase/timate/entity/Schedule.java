@@ -1,6 +1,7 @@
 package com.zerobase.timate.entity;
 
 
+import com.zerobase.timate.dto.ScheduleDto;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -52,5 +53,15 @@ public class Schedule {
   @JoinColumn(name = "calendar_id")
   private Calendar calendar;
 
+  public static Schedule of(ScheduleDto.Request dto, Calendar calendar) {
+    return Schedule.builder()
+			.creatorId(dto.getUserId())
+			.calendar(calendar)
+			.title(dto.getTitle())
+			.startDate(dto.getStartDate())
+			.endDate(dto.getEndDate())
+			.memo(dto.getMemo())
+			.build();
+  }
 
 }

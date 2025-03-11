@@ -31,11 +31,8 @@ public class UserDto {
 	@Builder
 	public static class Response {
 
-		@JsonProperty("id")
 		private Long id;
-		@JsonProperty("email")
 		private String email;
-		@JsonProperty("name")
 		private String name;
 
 		public static Response from(User user) {

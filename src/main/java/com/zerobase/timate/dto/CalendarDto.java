@@ -43,11 +43,8 @@ public class CalendarDto {
 	@Builder
 	public static class Response {
 
-		@JsonProperty("id")
 		private Long id;
-		@JsonProperty("name")
 		private String name;
-		@JsonProperty("type")
 		private CalendarType type;
 
 		public static Response from(Calendar calendar) {
