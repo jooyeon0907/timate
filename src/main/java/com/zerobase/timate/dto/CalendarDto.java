@@ -23,6 +23,7 @@ public class CalendarDto {
 
 	@Getter
 	@Setter
+	@NoArgsConstructor
 	@AllArgsConstructor
 	@Schema(name = "CalendarRequestDto", description = "캘린더 요청 DTO")
 	public static class Request {

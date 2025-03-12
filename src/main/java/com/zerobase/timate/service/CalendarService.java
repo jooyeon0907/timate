@@ -1,25 +1,24 @@
 package com.zerobase.timate.service;
 
-import static com.zerobase.timate.type.ErrorCode.CALENDAR_NOT_FOUND;
-
 import com.zerobase.timate.dto.CalendarDto;
 import com.zerobase.timate.dto.CalendarDto.Request;
 import com.zerobase.timate.entity.Calendar;
 import com.zerobase.timate.entity.MemberRole;
 import com.zerobase.timate.entity.User;
 import com.zerobase.timate.entity.UserCalendar;
-import com.zerobase.timate.entity.UserCalendarId;
-import com.zerobase.timate.exception.CalendarException;
 import com.zerobase.timate.repository.CalendarRepository;
 import com.zerobase.timate.repository.UserCalendarRepository;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
-@org.springframework.stereotype.Service
+@Service
 @RequiredArgsConstructor
 public class CalendarService {
 
@@ -27,6 +26,8 @@ public class CalendarService {
 
 	private final CalendarRepository calendarRepository;
 	private final UserCalendarRepository userCalendarRepository;
+
+	private final RedisTemplate<String, Object> redisTemplate;
 
 	@Transactional
 	public CalendarDto.Response create(Request request) {
@@ -51,35 +52,33 @@ public class CalendarService {
 	}
 
 	public CalendarDto.Response read(Long userId, Long id) {
-		commonService.checkCalendarMember(userId, id);
-		return CalendarDto.Response.from(getCalendarById(id));
+		return CalendarDto.Response.from(commonService.getCalendar(userId, id));
 	}
 
 	public CalendarDto.Response update(Request request) {
-		commonService.checkCalendarMaster(request.getUserId(), request.getId());
+		commonService.validateCalendarMaster(request.getUserId(), request.getId());
 
-		Calendar calendar = getCalendarById(request.getId());
+		Calendar calendar = (commonService.getCalendar(request.getUserId(), request.getId()));
 		calendar.setName(request.getName());
 		calendarRepository.save(calendar);
+
+		// @Cacheable 로 캐시 저장할 때와 반환 값이 달라서 redisTemplate 사용해 캐시 업데이트
+		redisTemplate.opsForValue().set("calendar::" + request.getUserId() + ":" + request.getId(), calendar);
 
 		return CalendarDto.Response.from(calendar);
 	}
 
 	@Transactional
-	public void delete(Long useId, Long id) {
-		commonService.checkCalendarMaster(useId, id);
+	@CacheEvict(value = "calendar", key = "#userId + ':' + #id")
+	public void delete(Long userId, Long id) {
+		commonService.validateCalendarMaster(userId, id);
 
-		Calendar calendar = getCalendarById(id);
+		Calendar calendar = commonService.getCalendar(userId, id);
 
 		userCalendarRepository.deleteByCalendarId(calendar.getId());
 
 		calendarRepository.deleteById(calendar.getId());
 
-	}
-
-	public Calendar getCalendarById(Long id) {
-		return calendarRepository.findById(id)
-			.orElseThrow(() -> new CalendarException(CALENDAR_NOT_FOUND));
 	}
 
 

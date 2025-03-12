@@ -2,6 +2,7 @@ package com.zerobase.timate.entity;
 
 
 import com.zerobase.timate.dto.ScheduleDto;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -49,7 +50,7 @@ public class Schedule {
   private double longitude;
 
 
-  @ManyToOne
+  @ManyToOne(cascade = CascadeType.MERGE)
   @JoinColumn(name = "calendar_id")
   private Calendar calendar;
 

@@ -21,6 +21,8 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.transaction.annotation.Transactional;
 
 
@@ -33,14 +35,14 @@ public class ScheduleService {
 
 	private final ScheduleRepository scheduleRepository;
 
+	private final RedisTemplate<String, Object> redisTemplate;
 
 	@Transactional
 	public ScheduleDto.Response create(ScheduleDto.Request request) {
 		Long userId = request.getUserId();
 		Long calendarId = request.getCalendarId();
 
-		UserCalendar userCalendar = commonService.getUserCalendar(userId, calendarId);
-		Calendar calendar = userCalendar.getCalendar();
+		Calendar calendar = commonService.getCalendar(userId, calendarId);
 
 		Schedule schedule = Schedule.of(request, calendar);
 		// TODO: 장소, To-do 추가
@@ -66,7 +68,7 @@ public class ScheduleService {
 	public Map<?, List<Response>> getSchedulesByPeriod(
 		Long userId, Long calendarId, LocalDate referenceDate, PeriodType period) {
 
-		commonService.checkCalendarMember(userId, calendarId);
+		commonService.validateCalendarMember(userId, calendarId);
 
 		Pair<LocalDate, LocalDate> pair = getStartDateAndEndDate(referenceDate, period);
 		LocalDate startDate = pair.getLeft();
@@ -94,16 +96,12 @@ public class ScheduleService {
 	}
 
 	public ScheduleDto.Response read(Long userId, Long calendarId, Long id) {
-		commonService.checkCalendarMember(userId, calendarId);
-
-		return ScheduleDto.Response.from(getScheduleById(id));
+		return ScheduleDto.Response.from(commonService.getSchedule(userId, calendarId, id));
 	}
 
 	@Transactional
 	public ScheduleDto.Response update(ScheduleDto.Request request) {
-		commonService.checkCalendarMember(request.getUserId(), request.getCalendarId());
-
-		Schedule schedule = getScheduleById(request.getId());
+		Schedule schedule = commonService.getSchedule(request.getUserId(), request.getCalendarId(), request.getId());
 
 		if (request.getTitle() != null) schedule.setTitle(request.getTitle());
 		if (request.getStartDate() != null) schedule.setStartDate(request.getStartDate());
@@ -113,18 +111,16 @@ public class ScheduleService {
 
 		scheduleRepository.save(schedule);
 
+		// @Cacheable 로 캐시 저장할 때와 반환 값이 달라서 redisTemplate 사용해 캐시 업데이트
+		redisTemplate.opsForValue().set("schedule::" + request.getCalendarId() + ":" + request.getId(), schedule);
+
 		return ScheduleDto.Response.from(schedule);
 	}
 
 	@Transactional
-	public void delete(Long useId, Long calendarId, Long id) {
-		commonService.checkCalendarMaster(useId, calendarId);
-		scheduleRepository.delete(getScheduleById(id));
-	}
-
-	private Schedule getScheduleById(Long id) {
-		return scheduleRepository.findById(id).
-			orElseThrow(() -> new ScheduleException(SCHEDULE_NOT_FOUND));
+	@CacheEvict(value = "schedule",  key = "#calendarId + ':' + #id")
+	public void delete(Long userId, Long calendarId, Long id) {
+		scheduleRepository.delete(commonService.getSchedule(userId, calendarId, id));
 	}
 
 }

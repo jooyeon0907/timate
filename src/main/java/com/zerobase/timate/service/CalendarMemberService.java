@@ -46,7 +46,7 @@ public class CalendarMemberService {
 
 		log.info("캘린더 멤버 추가 요청 - userId: {}, calendarId: {}", userId, calendarId);
 		User user = commonService.getUserById(userId);
-		Calendar calendar = calendarService.getCalendarById(calendarId);
+		Calendar calendar = commonService.getCalendarById(calendarId);
 
 
 		// 이미 초대된 멤버인지 확인
@@ -66,7 +66,7 @@ public class CalendarMemberService {
 
 	public List<UserDto.Response> memberList(Long userId, Long calendarId) {
 		// 해당 캘린더의 멤버인지 확인
-		commonService.checkCalendarMember(userId, calendarId);
+		commonService.validateCalendarMember(userId, calendarId);
 
 		List<UserCalendar> userCalendars = userCalendarRepository.findByCalendarIdWithUser(calendarId);
 
@@ -111,7 +111,7 @@ public class CalendarMemberService {
 		Long newMasterId = request.getNewMasterId();
 
 		// 해당 사용자 권한이 MASTER 인지 확인
-		commonService.checkCalendarMaster(userId, calendarId);
+		commonService.validateCalendarMaster(userId, calendarId);
 
 		changeMaster(userId, newMasterId, calendarId);
 
