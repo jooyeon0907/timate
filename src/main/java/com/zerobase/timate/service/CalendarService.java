@@ -1,5 +1,7 @@
 package com.zerobase.timate.service;
 
+import static com.zerobase.timate.dto.CalendarDto.Cached.toEntity;
+
 import com.zerobase.timate.dto.CalendarDto;
 import com.zerobase.timate.dto.CalendarDto.Request;
 import com.zerobase.timate.entity.Calendar;
@@ -13,7 +15,6 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,8 +28,6 @@ public class CalendarService {
 	private final CalendarRepository calendarRepository;
 	private final UserCalendarRepository userCalendarRepository;
 
-	private final RedisTemplate<String, Object> redisTemplate;
-
 	@Transactional
 	public CalendarDto.Response create(Request request) {
 		User user = commonService.getUserById(request.getUserId());
@@ -40,7 +39,8 @@ public class CalendarService {
 		UserCalendar userCalendar = UserCalendar.of(user, calendar, MemberRole.MASTER);
 		userCalendarRepository.save(userCalendar);
 
-		return CalendarDto.Response.from(calendar);
+		return CalendarDto.Response.from(
+			toEntity(commonService.getCalendarFromCache(user.getId(), calendar.getId())));
 	}
 
 	public List<CalendarDto.Response> list(Long userId) {
@@ -52,20 +52,13 @@ public class CalendarService {
 	}
 
 	public CalendarDto.Response read(Long userId, Long id) {
-		return CalendarDto.Response.from(commonService.getCalendar(userId, id));
+		return CalendarDto.Response.from(
+			toEntity(commonService.getCalendarFromCache(userId, id)));
 	}
 
 	public CalendarDto.Response update(Request request) {
 		commonService.validateCalendarMaster(request.getUserId(), request.getId());
-
-		Calendar calendar = (commonService.getCalendar(request.getUserId(), request.getId()));
-		calendar.setName(request.getName());
-		calendarRepository.save(calendar);
-
-		// @Cacheable 로 캐시 저장할 때와 반환 값이 달라서 redisTemplate 사용해 캐시 업데이트
-		redisTemplate.opsForValue().set("calendar::" + request.getUserId() + ":" + request.getId(), calendar);
-
-		return CalendarDto.Response.from(calendar);
+		return CalendarDto.Response.from(toEntity(commonService.updateCalendarFromCache(request)));
 	}
 
 	@Transactional
@@ -73,7 +66,7 @@ public class CalendarService {
 	public void delete(Long userId, Long id) {
 		commonService.validateCalendarMaster(userId, id);
 
-		Calendar calendar = commonService.getCalendar(userId, id);
+		Calendar calendar = toEntity(commonService.getCalendarFromCache(userId, id));
 
 		userCalendarRepository.deleteByCalendarId(calendar.getId());
 

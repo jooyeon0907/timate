@@ -1,15 +1,15 @@
 package com.zerobase.timate.service;
 
+import static com.zerobase.timate.dto.ScheduleDto.Cached.toEntity;
 import static com.zerobase.timate.entity.PeriodType.DAILY;
 import static com.zerobase.timate.type.ErrorCode.INVALID_PERIOD;
-import static com.zerobase.timate.type.ErrorCode.SCHEDULE_NOT_FOUND;
 
+import com.zerobase.timate.dto.CalendarDto;
 import com.zerobase.timate.dto.ScheduleDto;
 import com.zerobase.timate.dto.ScheduleDto.Response;
 import com.zerobase.timate.entity.Calendar;
 import com.zerobase.timate.entity.PeriodType;
 import com.zerobase.timate.entity.Schedule;
-import com.zerobase.timate.entity.UserCalendar;
 import com.zerobase.timate.exception.ScheduleException;
 import com.zerobase.timate.repository.ScheduleRepository;
 import java.time.DayOfWeek;
@@ -22,7 +22,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.transaction.annotation.Transactional;
 
 
@@ -35,20 +34,18 @@ public class ScheduleService {
 
 	private final ScheduleRepository scheduleRepository;
 
-	private final RedisTemplate<String, Object> redisTemplate;
-
 	@Transactional
 	public ScheduleDto.Response create(ScheduleDto.Request request) {
 		Long userId = request.getUserId();
 		Long calendarId = request.getCalendarId();
 
-		Calendar calendar = commonService.getCalendar(userId, calendarId);
+		Calendar calendar = CalendarDto.Cached.toEntity(commonService.getCalendarFromCache(userId, calendarId));
 
 		Schedule schedule = Schedule.of(request, calendar);
 		// TODO: 장소, To-do 추가
 		scheduleRepository.save(schedule);
 
-		return ScheduleDto.Response.from(schedule);
+		return ScheduleDto.Response.from(toEntity(commonService.getScheduleFromCache(userId, calendarId, schedule.getId())));
 	}
 
 	public Pair<LocalDate, LocalDate> getStartDateAndEndDate(LocalDate referenceDate, PeriodType period) {
@@ -96,31 +93,18 @@ public class ScheduleService {
 	}
 
 	public ScheduleDto.Response read(Long userId, Long calendarId, Long id) {
-		return ScheduleDto.Response.from(commonService.getSchedule(userId, calendarId, id));
+		return ScheduleDto.Response.from(toEntity(commonService.getScheduleFromCache(userId, calendarId, id)));
 	}
 
 	@Transactional
 	public ScheduleDto.Response update(ScheduleDto.Request request) {
-		Schedule schedule = commonService.getSchedule(request.getUserId(), request.getCalendarId(), request.getId());
-
-		if (request.getTitle() != null) schedule.setTitle(request.getTitle());
-		if (request.getStartDate() != null) schedule.setStartDate(request.getStartDate());
-		if (request.getStartDate() != null) schedule.setEndDate(request.getEndDate());
-		if (request.getMemo() != null) schedule.setMemo(request.getMemo());
-		// TODO: 장소, To-do 추가
-
-		scheduleRepository.save(schedule);
-
-		// @Cacheable 로 캐시 저장할 때와 반환 값이 달라서 redisTemplate 사용해 캐시 업데이트
-		redisTemplate.opsForValue().set("schedule::" + request.getCalendarId() + ":" + request.getId(), schedule);
-
-		return ScheduleDto.Response.from(schedule);
+		return ScheduleDto.Response.from(ScheduleDto.Cached.toEntity(commonService.updateScheduleFromCache(request)));
 	}
 
 	@Transactional
 	@CacheEvict(value = "schedule",  key = "#calendarId + ':' + #id")
 	public void delete(Long userId, Long calendarId, Long id) {
-		scheduleRepository.delete(commonService.getSchedule(userId, calendarId, id));
+		scheduleRepository.delete(toEntity(commonService.getScheduleFromCache(userId, calendarId, id)));
 	}
 
 }

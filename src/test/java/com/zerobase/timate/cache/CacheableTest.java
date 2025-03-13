@@ -35,18 +35,18 @@ class CacheableTest {
     @BeforeEach
     void setUp() {
         userId = 18L;
-        calendarId = 1031L;
+        calendarId = 1034L;
     }
 
     @Test
     public void testCalendarCaching_read() {
 
         // 첫번째 호출 - db 에서 호출, 캐시 저장
-        Calendar firstCall = commonService.getCalendar(userId, calendarId);
+        CalendarDto.Cached firstCall = commonService.getCalendarFromCache(userId, calendarId);
         assertNotNull(firstCall);
 
         // 두번째 호출 - 캐시 값 호출
-        Calendar secondCall = commonService.getCalendar(userId, calendarId);
+        CalendarDto.Cached secondCall = commonService.getCalendarFromCache(userId, calendarId);
         assertNotNull(secondCall);
 
         // 첫 번째와 두 번째 호출 결과가 동일해야 함
@@ -57,7 +57,7 @@ class CacheableTest {
         Cache cache = cacheManager.getCache("calendar");
         assertNotNull(cache);
 
-        Calendar cachedValue = cache.get(userId + ":" + calendarId, Calendar.class);
+        CalendarDto.Cached cachedValue = cache.get(userId + ":" + calendarId, CalendarDto.Cached.class);
         assertEquals(firstCall.getId(), cachedValue.getId());
         assertEquals(firstCall.getName(), cachedValue.getName());
     }
@@ -83,7 +83,7 @@ class CacheableTest {
     public void testCalendarCaching_update() {
 
         // 첫번째 호출 - db 에서 호출, 캐시 저장
-        Calendar firstCall = commonService.getCalendar(userId, calendarId);
+        CalendarDto.Cached firstCall = commonService.getCalendarFromCache(userId, calendarId);
         assertNotNull(firstCall);
 
         CalendarDto.Request request = new CalendarDto.Request();
@@ -94,7 +94,7 @@ class CacheableTest {
         calendarService.update(request);
 
         // 두번째 호출 - 캐시 값 호출
-        Calendar secondCall = commonService.getCalendar(userId, calendarId);
+        CalendarDto.Cached secondCall = commonService.getCalendarFromCache(userId, calendarId);
         assertNotNull(secondCall);
 
         assertNotEquals(firstCall.getName(), secondCall.getName());
@@ -103,7 +103,7 @@ class CacheableTest {
         Cache cache = cacheManager.getCache("calendar");
         assertNotNull(cache);
 
-        Calendar cachedValue = cache.get(userId + ":" + calendarId, Calendar.class);
+        CalendarDto.Cached cachedValue = cache.get(userId + ":" + calendarId, CalendarDto.Cached.class);
         assertNotEquals(firstCall.getName(), cachedValue.getName());
         assertEquals(secondCall.getId(), cachedValue.getId());
     }

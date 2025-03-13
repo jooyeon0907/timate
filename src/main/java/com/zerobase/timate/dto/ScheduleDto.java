@@ -1,10 +1,8 @@
 package com.zerobase.timate.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.zerobase.timate.entity.Calendar;
 import com.zerobase.timate.entity.Schedule;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.persistence.Column;
-import jakarta.validation.constraints.AssertFalse;
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
@@ -93,6 +91,58 @@ public class ScheduleDto {
 				.longitude(schedule.getLongitude())
 				.build();
 		}
+
+	}
+
+	@Getter
+	@Setter
+	@NoArgsConstructor
+	@AllArgsConstructor
+	@Builder
+	public static class Cached {
+
+		private Long id;
+		private Long creatorId;
+		private String title;
+		private LocalDateTime startDate;
+		private LocalDateTime endDate;
+		private String memo;
+
+		private String placeName;
+		private String address;
+		private double latitude;
+		private double longitude;
+
+		private Calendar calendar;
+
+		public static Cached from(Schedule schedule) {
+			return Cached.builder()
+				.id(schedule.getId())
+				.creatorId(schedule.getCreatorId())
+				.calendar(schedule.getCalendar())
+				.title(schedule.getTitle())
+				.startDate(schedule.getStartDate())
+				.endDate(schedule.getEndDate())
+				.memo(schedule.getMemo())
+				.placeName(schedule.getPlaceName())
+				.address(schedule.getAddress())
+				.latitude(schedule.getLatitude())
+				.longitude(schedule.getLongitude())
+				.build();
+		}
+
+	  public static Schedule toEntity(ScheduleDto.Cached dto) {
+		return Schedule.builder()
+			.id(dto.getId())
+			.creatorId(dto.getCreatorId())
+			.calendar(dto.getCalendar())
+			.title(dto.getTitle())
+			.startDate(dto.getStartDate())
+			.endDate(dto.getEndDate())
+			.memo(dto.getMemo())
+			.build();
+	  }
+
 
 	}
 

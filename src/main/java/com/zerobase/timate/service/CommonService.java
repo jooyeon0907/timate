@@ -1,11 +1,16 @@
 package com.zerobase.timate.service;
 
+import static com.zerobase.timate.dto.CalendarDto.Cached.toEntity;
 import static com.zerobase.timate.type.ErrorCode.CALENDAR_NOT_FOUND;
 import static com.zerobase.timate.type.ErrorCode.NOT_CALENDAR_MASTER;
 import static com.zerobase.timate.type.ErrorCode.NOT_CALENDAR_MEMBER;
 import static com.zerobase.timate.type.ErrorCode.SCHEDULE_NOT_FOUND;
 import static com.zerobase.timate.type.ErrorCode.USER_NOT_FOUND;
 
+import com.zerobase.timate.dto.CalendarDto;
+import com.zerobase.timate.dto.CalendarDto.Request;
+import com.zerobase.timate.dto.ScheduleDto;
+import com.zerobase.timate.dto.ScheduleDto.Cached;
 import com.zerobase.timate.entity.Calendar;
 import com.zerobase.timate.entity.MemberRole;
 import com.zerobase.timate.entity.Schedule;
@@ -20,9 +25,9 @@ import com.zerobase.timate.repository.UserCalendarRepository;
 import com.zerobase.timate.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
@@ -46,11 +51,22 @@ public class CommonService {
 	}
 
 	@Cacheable(value = "calendar", key = "#userId + ':' + #calendarId")
-	public Calendar getCalendar(Long userId, Long calendarId) {
-		log.info("Calling getCalendar method for userId: {}, calendarId: {}", userId, calendarId);
+	public CalendarDto.Cached getCalendarFromCache(Long userId, Long calendarId) {
+		log.info("Calling getCalendarFromCache method for userId: {}, calendarId: {}", userId, calendarId);
 		validateCalendarMember(userId, calendarId);
-		return calendarRepository.findById(calendarId)
+		Calendar calendar = calendarRepository.findById(calendarId)
 			.orElseThrow(() -> new CalendarException(CALENDAR_NOT_FOUND));
+		return CalendarDto.Cached.from(calendar);
+	}
+
+	@CachePut(value = "calendar", key = "#request.userId + ':' + #request.id")
+	public CalendarDto.Cached updateCalendarFromCache(Request request) {
+
+		Calendar calendar = toEntity(getCalendarFromCache(request.getUserId(), request.getId()));
+		calendar.setName(request.getName());
+		calendarRepository.save(calendar);
+
+		return CalendarDto.Cached.from(calendar);
 	}
 
 	/**
@@ -74,13 +90,31 @@ public class CommonService {
 	}
 
 	@Cacheable(value = "schedule", key = "#calendarId + ':' + #scheduleId")
-	public Schedule getSchedule(Long userId, Long calendarId, Long scheduleId) {
+	public ScheduleDto.Cached getScheduleFromCache(Long userId, Long calendarId, Long scheduleId) {
 		log.info("Calling getSchedule method for calendarId: {}, scheduleId: {}", calendarId, scheduleId);
 		validateCalendarMember(userId, calendarId);
 		validateSchedule(calendarId, scheduleId);
-		return scheduleRepository.findByIdAndCalendarId(scheduleId, calendarId)
+		Schedule schedule = scheduleRepository.findByIdAndCalendarId(scheduleId, calendarId)
 			.orElseThrow(() -> new ScheduleException(SCHEDULE_NOT_FOUND));
+		return ScheduleDto.Cached.from(schedule);
 	}
+
+
+	@CachePut(value = "schedule", key = "#request.calendarId + ':' + #request.id")
+	public ScheduleDto.Cached updateScheduleFromCache(ScheduleDto.Request request) {
+		Schedule schedule = Cached.toEntity(getScheduleFromCache(request.getUserId(), request.getCalendarId(), request.getId()));
+
+		if (request.getTitle() != null) schedule.setTitle(request.getTitle());
+		if (request.getStartDate() != null) schedule.setStartDate(request.getStartDate());
+		if (request.getStartDate() != null) schedule.setEndDate(request.getEndDate());
+		if (request.getMemo() != null) schedule.setMemo(request.getMemo());
+		// TODO: 장소, To-do 추가
+
+		scheduleRepository.save(schedule);
+
+		return ScheduleDto.Cached.from(schedule);
+	}
+
 
 	/**
 	 * 주어진 userId와 calendarId에 대해 사용자가 해당 캘린더의 멤버인지 확인합니다.

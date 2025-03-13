@@ -35,15 +35,6 @@ public class RedisConfig {
 	}
 
 	@Bean
-	public RedisTemplate<String, Object> jsonRedisTemplate(RedisConnectionFactory connectionFactory) {
-		RedisTemplate<String, Object> template = new RedisTemplate<>();
-		template.setConnectionFactory(connectionFactory);
-		template.setKeySerializer(new StringRedisSerializer());
-		template.setValueSerializer(new GenericJackson2JsonRedisSerializer());  // Generic JSON 직렬화
-		return template;
-	}
-
-	@Bean
 	// @Cacheable 사용 시 적용되는 설정
 	public RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory) {
 		ObjectMapper objectMapper = new ObjectMapper();
@@ -53,6 +44,7 @@ public class RedisConfig {
 			ObjectMapper.DefaultTyping.NON_FINAL,
 			// 타입 정보를 포함할 클래스의 범위를 지정 -> final 이 아닌 모든 클래스에 대해 타입 정보를 추가
 			JsonTypeInfo.As.PROPERTY); // 직렬화된 JSON 에 타입 정보가 별도의 프로퍼티로 추가됨
+
 		/*
 		activateDefaultTyping() 하는 이유?
 		- activateDefaultTyping()은 ObjectMapper 가 JSON 직렬화/역직렬화 과정에서 객체 타입 정보를 포함하거나 인식하도록 설정하는 메서드이다.

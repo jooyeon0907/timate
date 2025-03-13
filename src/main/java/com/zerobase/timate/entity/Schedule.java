@@ -56,13 +56,14 @@ public class Schedule {
 
   public static Schedule of(ScheduleDto.Request dto, Calendar calendar) {
     return Schedule.builder()
-			.creatorId(dto.getUserId())
-			.calendar(calendar)
-			.title(dto.getTitle())
-			.startDate(dto.getStartDate())
-			.endDate(dto.getEndDate())
-			.memo(dto.getMemo())
-			.build();
+		.creatorId(dto.getUserId())
+		.calendar(calendar)
+		.title(dto.getTitle())
+		.startDate(dto.getStartDate())
+		.endDate(dto.getEndDate())
+		.memo(dto.getMemo())
+		.build();
   }
+
 
 }

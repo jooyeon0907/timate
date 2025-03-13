@@ -58,4 +58,33 @@ public class CalendarDto {
 
 	}
 
+	@Getter
+	@Setter
+	@NoArgsConstructor
+	@AllArgsConstructor
+	@Builder
+	public static class Cached {
+
+		private Long id;
+		private String name;
+		private CalendarType type;
+
+		public static Cached from(Calendar calendar) {
+			return Cached.builder()
+				.id(calendar.getId())
+				.type(calendar.getType())
+				.name(calendar.getName())
+				.build();
+		}
+
+		public static Calendar toEntity(CalendarDto.Cached calendar) {
+			return Calendar.builder()
+				.id(calendar.getId())
+				.type(calendar.getType())
+				.name(calendar.getName())
+				.build();
+		}
+
+	}
+
 }
