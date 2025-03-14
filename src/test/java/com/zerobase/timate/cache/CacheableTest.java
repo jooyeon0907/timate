@@ -6,9 +6,10 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.zerobase.timate.dto.CalendarDto;
-import com.zerobase.timate.entity.Calendar;
+import com.zerobase.timate.dto.ScheduleDto;
 import com.zerobase.timate.service.CalendarService;
 import com.zerobase.timate.service.CommonService;
+import com.zerobase.timate.service.ScheduleService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,17 +26,21 @@ class CacheableTest {
 
     @Autowired
     private CalendarService calendarService;
+    @Autowired
+    private ScheduleService scheduleService;
 
     @Autowired
     private CacheManager cacheManager;
 
     private Long userId;
     private Long calendarId;
+    private Long scheduleId;
 
     @BeforeEach
     void setUp() {
         userId = 18L;
         calendarId = 1034L;
+        scheduleId = 7L;
     }
 
     @Test
@@ -105,6 +110,60 @@ class CacheableTest {
 
         CalendarDto.Cached cachedValue = cache.get(userId + ":" + calendarId, CalendarDto.Cached.class);
         assertNotEquals(firstCall.getName(), cachedValue.getName());
+        assertEquals(secondCall.getId(), cachedValue.getId());
+    }
+
+    @Test
+    public void testScheduleCaching_read() {
+
+        // 첫번째 호출 - db 에서 호출, 캐시 저장
+        ScheduleDto.Cached firstCall = commonService.getScheduleFromCache(userId, calendarId, scheduleId);
+        assertNotNull(firstCall);
+
+        // 두번째 호출 - 캐시 값 호출
+        ScheduleDto.Cached secondCall = commonService.getScheduleFromCache(userId, calendarId, scheduleId);
+        assertNotNull(secondCall);
+
+        // 첫 번째와 두 번째 호출 결과가 동일해야 함
+        assertEquals(firstCall.getId(), secondCall.getId());
+        assertEquals(firstCall.getTitle(), secondCall.getTitle());
+
+        // CacheManager를 이용해 직접 캐시를 확인할 수 있음
+        Cache cache = cacheManager.getCache("schedule");
+        assertNotNull(cache);
+
+        ScheduleDto.Cached cachedValue = cache.get(calendarId + ":" + scheduleId, ScheduleDto.Cached.class);
+        assertEquals(firstCall.getId(), cachedValue.getId());
+        assertEquals(firstCall.getTitle(), cachedValue.getTitle());
+    }
+
+    @Test
+    public void testScheduleCaching_update() {
+
+        // 첫번째 호출 - db 에서 호출, 캐시 저장
+        ScheduleDto.Cached firstCall = commonService.getScheduleFromCache(userId, calendarId, scheduleId);
+        assertNotNull(firstCall);
+
+        ScheduleDto.Request request = new ScheduleDto.Request();
+        request.setUserId(userId);
+        request.setCalendarId(calendarId);
+        request.setId(scheduleId);
+        request.setTitle(firstCall.getTitle() + 1);
+        // 캐시에도 수정된 값이 업데이트 되어야 함
+        scheduleService.update(request);
+
+        // 두번째 호출 - 캐시 값 호출
+        ScheduleDto.Cached secondCall = commonService.getScheduleFromCache(userId, calendarId, scheduleId);
+        assertNotNull(secondCall);
+
+        assertNotEquals(firstCall.getTitle(), secondCall.getTitle());
+
+        // CacheManager를 이용해 직접 캐시를 확인할 수 있음
+        Cache cache = cacheManager.getCache("schedule");
+        assertNotNull(cache);
+
+        ScheduleDto.Cached cachedValue = cache.get(calendarId + ":" + scheduleId, ScheduleDto.Cached.class);
+        assertNotEquals(firstCall.getTitle(), cachedValue.getTitle());
         assertEquals(secondCall.getId(), cachedValue.getId());
     }
 

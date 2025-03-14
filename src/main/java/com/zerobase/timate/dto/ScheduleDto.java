@@ -22,6 +22,7 @@ public class ScheduleDto {
 
 	@Getter
 	@Setter
+	@NoArgsConstructor
 	@AllArgsConstructor
 	@Schema(name = "ScheduleRequestDto", description = "일정 요청 DTO")
 	public static class Request {

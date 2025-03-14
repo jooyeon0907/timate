@@ -91,7 +91,7 @@ public class CommonService {
 
 	@Cacheable(value = "schedule", key = "#calendarId + ':' + #scheduleId")
 	public ScheduleDto.Cached getScheduleFromCache(Long userId, Long calendarId, Long scheduleId) {
-		log.info("Calling getSchedule method for calendarId: {}, scheduleId: {}", calendarId, scheduleId);
+		log.info("Calling getSchedule method for userId:{}, calendarId: {}, scheduleId: {}", userId, calendarId, scheduleId);
 		validateCalendarMember(userId, calendarId);
 		validateSchedule(calendarId, scheduleId);
 		Schedule schedule = scheduleRepository.findByIdAndCalendarId(scheduleId, calendarId)
